@@ -69,7 +69,7 @@ void process_client(int client_fd)
 
         nread = read(client_fd, buffer, BUF_SIZE - 1);
         buffer[nread] = '\0';
-        printf("%s", buffer);
+        printf("%s / %d", buffer, nread);
 
         fflush(stdout);
     }

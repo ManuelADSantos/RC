@@ -2,6 +2,8 @@
  * SERVIDOR no porto 9000, à escuta de novos clientes.  Quando surjem
  * novos clientes os dados por eles enviados são lidos e descarregados no ecran.
  *******************************************************************************/
+
+//OLAAAAAA
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>

@@ -62,14 +62,17 @@ int main()
 // telnet 127.0.0.1 9876
 void process_client(int client_fd)
 {
-    int nread = 0;
-    char buffer[BUF_SIZE];
+    while (1)
+    {
+        int nread = 0;
+        char buffer[BUF_SIZE];
 
-    nread = read(client_fd, buffer, BUF_SIZE - 1);
-    buffer[nread] = '\0';
-    printf("%s\n", buffer);
+        nread = read(client_fd, buffer, BUF_SIZE - 1);
+        buffer[nread] = '\0';
+        printf("%s", buffer);
 
-    fflush(stdout);
+        fflush(stdout);
+    }
 
     close(client_fd);
 }

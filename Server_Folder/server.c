@@ -58,18 +58,19 @@ int main(int argc, char *argv[])
 // telnet 127.0.0.1 9876
 void process_client(int client_fd)
 {
-    while (1)
-    {
-        // nread -> nº de caracteres lidos (incluindo \n e \0)
-        int nread = 0;
-        char buffer[BUF_SIZE];
+    // nread -> nº de caracteres lidos (incluindo \n e \0)
+    ssize_t nread = 0;
+    char buffer[BUF_SIZE];
 
-        nread = read(client_fd, buffer, BUF_SIZE - 1);
-        buffer[nread - 1] = '\0';
-        printf("%s - %d\n", buffer, nread);
+    nread = read(client_fd, buffer, BUF_SIZE - 1);
+    buffer[nread] = '\0';
 
-        fflush(stdout);
-    }
+    for (int i = 0; i < nread; i++)
+        printf("(%c)\n", buffer[i]);
+
+    printf("%s<->%ld\n", buffer, nread);
+
+    fflush(stdout);
 
     close(client_fd);
 }

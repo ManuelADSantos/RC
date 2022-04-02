@@ -1,7 +1,3 @@
-/*******************************************************************************
- * SERVIDOR no porto 9000, à escuta de novos clientes.  Quando surjem
- * novos clientes os dados por eles enviados são lidos e descarregados no ecran.
- *******************************************************************************/
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -19,7 +15,7 @@
 void process_client(int fd);
 void erro(char *msg);
 
-int main()
+int main(int argc, char *argv[])
 {
     int fd, client;
     struct sockaddr_in addr, client_addr;
@@ -64,12 +60,13 @@ void process_client(int client_fd)
 {
     while (1)
     {
+        // nread -> nº de caracteres lidos (incluindo \n e \0)
         int nread = 0;
         char buffer[BUF_SIZE];
 
         nread = read(client_fd, buffer, BUF_SIZE - 1);
-        buffer[nread] = '\0';
-        printf("%s / %d", buffer, nread);
+        buffer[nread - 1] = '\0';
+        printf("%s - %d\n", buffer, nread);
 
         fflush(stdout);
     }

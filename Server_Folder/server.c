@@ -14,7 +14,8 @@
 
 void process_client(int fd);
 void erro(char *msg);
-void msg_login(int client_fd);
+// Login de clientes
+void client_login(int client_fd, char username[]);
 
 int main(int argc, char *argv[])
 {
@@ -60,8 +61,8 @@ int main(int argc, char *argv[])
 void process_client(int client_fd)
 {
     // nread -> nº de caracteres lidos (incluindo \n e \0)
-    ssize_t nread = 0;
-    char buffer[BUF_SIZE] = "";
+    // ssize_t nread = 0;
+    // char buffer[BUF_SIZE] = "";
 
     /*nread = read(client_fd, buffer, BUF_SIZE);
     buffer[nread] = '\0';
@@ -73,7 +74,9 @@ void process_client(int client_fd)
 
     printf("\n%s<->%ld\n", buffer, nread);*/
 
-    msg_login(client_fd);
+    // Login de Clientes
+    char username[BUF_SIZE] = "";
+    client_login(client_fd, username);
 
     fflush(stdout);
 
@@ -86,10 +89,86 @@ void erro(char *msg)
     exit(-1);
 }
 
-void msg_login(int client_fd)
+// Return 0 if OK,-1 if error
+void client_login(int client_fd, char username[])
 {
-    char msg1[] = "\n==========================================\n";
-    write(client_fd, msg1, sizeof(msg1));
-    char msg2[] = "                  LOGIN\n\n ";
-    write(client_fd, msg2, sizeof(msg2));
+    char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
+    write(client_fd, msg_inicial, strlen(msg_inicial));
+
+    int option = -1;
+    while (option == -1)
+    {
+        // Enviar print de pedido do username
+        char msg_get_user[] = "\n Username: ";
+        // ssize_t size_msg_user =
+        send(client_fd, msg_get_user, strlen(msg_get_user), 0);
+        fflush(stdout);
+        // printf("Enviados %ld bytes\n", size_msg_user);
+        // fflush(stdout);
+
+        // Receber username inserido
+        ssize_t size_user = recv(client_fd, username, BUF_SIZE, 0);
+        username[size_user - 2] = '\0';
+        // printf("Recebidos %ld bytes\n", size_user);
+
+        // DEBUG
+        // printf("\n%s<->%ld\n", username, strlen(username));
+        // fflush(stdout);
+
+        FILE *file_user;
+        char filename_user[BUF_SIZE];
+        strcpy(filename_user, username);
+        strcat(filename_user, ".txt");
+
+        // DEBUG
+        // printf("%s\n", filename_user);
+
+        if ((file_user = fopen(filename_user, "r")) == NULL)
+        {
+            // Caso não exista o username em causa
+            char msg_get_user_error[] = "  Username não existe. Insira um username válido\n";
+            send(client_fd, msg_get_user_error, strlen(msg_get_user_error), 0);
+            fflush(stdout);
+            option = -1;
+        }
+        else
+        {
+            // Existe username em causa
+            char user_password_auth[BUF_SIZE];
+            fread(user_password_auth, sizeof(user_password_auth), 1, file_user);
+            fflush(stdout);
+
+            // Pedir password
+            char msg_get_password[] = "\n Password: ";
+            send(client_fd, msg_get_password, strlen(msg_get_password), 0);
+            fflush(stdout);
+
+            // Receber password inserido
+            char password[BUF_SIZE];
+            ssize_t size_password = recv(client_fd, password, BUF_SIZE, 0);
+            password[size_password - 2] = '\0';
+            // printf("Recebidos %ld bytes\n", size_password);
+
+            // printf("file: %s\ninserida: %s\n", user_password_auth, password);
+
+            if (strcmp(password, user_password_auth) == 0)
+            {
+                // printf("LOGIN AUTORIZADO\n");
+                char msg_login_sucess[] = "\n Bem vind@ ";
+                strcat(msg_login_sucess, username);
+                strcat(msg_login_sucess, "\n\n");
+                send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
+                fflush(stdout);
+                option = 0;
+            }
+            else
+            {
+                // printf("PASSWORD ERRADA\n");
+                char msg_get_password_error[] = "  Password Incorrreta\n";
+                send(client_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
+                fflush(stdout);
+                option = -1;
+            }
+        }
+    }
 }

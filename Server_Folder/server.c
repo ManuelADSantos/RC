@@ -14,6 +14,7 @@
 
 void process_client(int fd);
 void erro(char *msg);
+void msg_login(int client_fd);
 
 int main(int argc, char *argv[])
 {
@@ -60,15 +61,19 @@ void process_client(int client_fd)
 {
     // nread -> nº de caracteres lidos (incluindo \n e \0)
     ssize_t nread = 0;
-    char buffer[BUF_SIZE];
+    char buffer[BUF_SIZE] = "";
 
-    nread = read(client_fd, buffer, BUF_SIZE - 1);
+    /*nread = read(client_fd, buffer, BUF_SIZE);
     buffer[nread] = '\0';
 
-    for (int i = 0; i < nread; i++)
-        printf("(%c)\n", buffer[i]);
+    for (int i = 0; i <= nread; i++)
+        printf("(%c,%d)", buffer[i], i);
 
-    printf("%s<->%ld\n", buffer, nread);
+    fflush(stdout);
+
+    printf("\n%s<->%ld\n", buffer, nread);*/
+
+    msg_login(client_fd);
 
     fflush(stdout);
 
@@ -79,4 +84,12 @@ void erro(char *msg)
 {
     printf("Erro: %s\n", msg);
     exit(-1);
+}
+
+void msg_login(int client_fd)
+{
+    char msg1[] = "\n==========================================\n";
+    write(client_fd, msg1, sizeof(msg1));
+    char msg2[] = "                  LOGIN\n\n ";
+    write(client_fd, msg2, sizeof(msg2));
 }

@@ -19,7 +19,7 @@ void login(int client_fd, char username[]);
 // Menu Client
 void menu_client(int client_fd, char username[]);
 // Menu Admin
-void menu_admin(int admin_fd, char username[]);
+void menu_admin(int admin_fd);
 
 int main(int argc, char *argv[])
 {
@@ -72,6 +72,7 @@ void process_client(int client_fd)
     if (strcmp(username, "admin") == 0)
     {
         // printf("Login Admin\n");
+        menu_admin(client_fd);
     }
     else
     {
@@ -204,6 +205,52 @@ void menu_client(int client_fd, char username[])
 }
 
 // ==================== Menu Admin ====================
-void menu_admin(int admin_fd, char username[])
+void menu_admin(int admin_fd)
 {
+    char menu_admin[] = "\n==========================================\n             MENU ADMIN\n\n";
+    send(admin_fd, menu_admin, strlen(menu_admin), 0);
+    fflush(stdout);
+
+    char admin_options[] = "  (1) Consultar\n  (2) Adicionar\n  (3) Remover\n  (4) Sair\n\n";
+    send(admin_fd, admin_options, strlen(admin_options), 0);
+    fflush(stdout);
+
+    char option[2];
+    recv(admin_fd, option, 2, 0);
+    fflush(stdout);
+
+    // printf("Selecionou a opção %c", option[0]);
+    // printf("Foi lido isto -> %s", option);
+
+    FILE *file_words;
+    char word[BUF_SIZE];
+    if (option[0] == '1')
+    {
+        file_words = fopen("words.txt", "r");
+
+        while (fgets(word, sizeof(word), file_words))
+        {
+            word[strlen(word) - 1] = '\0';
+            printf("%s\n", word);
+        }
+
+        fflush(stdout);
+
+        fclose(file_words);
+    }
+    else if (option[0] == '2')
+    {
+    }
+    else if (option[0] == '3')
+    {
+    }
+    else if (option[0] == '4')
+    {
+        char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
+        send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);
+        fflush(stdout);
+    }
+    else
+    {
+    }
 }

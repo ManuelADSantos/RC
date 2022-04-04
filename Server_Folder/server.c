@@ -248,12 +248,24 @@ void menu_admin(int admin_fd)
                 // printf("%s\n", word);
             }
 
-            fflush(stdout);
-
             fclose(file_words);
         }
         else if (option[0] == '2') // Adicionar ao ficheiro
         {
+            file_words = fopen("words.txt", "a");
+
+            // Printf escolha
+            char menu_adicionar[] = "\n==========================================\n               ADICIONAR\n\n";
+            send(admin_fd, menu_adicionar, strlen(menu_adicionar), 0);
+            fflush(stdout);
+
+            char new_word[BUF_SIZE] = "";
+            // ssize_t size_new_word =
+            recv(admin_fd, new_word, BUF_SIZE - 1, 0);
+            fwrite(new_word, sizeof(char), strlen(new_word), file_words);
+            fflush(stdout);
+
+            fclose(file_words);
         }
         else if (option[0] == '3') // Remover do ficheiro
         {

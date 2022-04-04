@@ -230,8 +230,10 @@ void menu_admin(int admin_fd)
 
         while (fgets(word, sizeof(word), file_words))
         {
-            word[strlen(word) - 1] = '\0';
-            printf("%s\n", word);
+            // word[strlen(word) - 1] = '\0';
+            send(admin_fd, word, strlen(word), 0);
+            fflush(stdout);
+            // printf("%s\n", word);
         }
 
         fflush(stdout);

@@ -138,36 +138,52 @@ void client_login(int client_fd, char username[])
             fread(user_password_auth, sizeof(user_password_auth), 1, file_user);
             fflush(stdout);
 
-            // Pedir password
-            char msg_get_password[] = "\n Password: ";
-            send(client_fd, msg_get_password, strlen(msg_get_password), 0);
-            fflush(stdout);
-
-            // Receber password inserido
-            char password[BUF_SIZE];
-            ssize_t size_password = recv(client_fd, password, BUF_SIZE, 0);
-            password[size_password - 2] = '\0';
-            // printf("Recebidos %ld bytes\n", size_password);
-
-            // printf("file: %s\ninserida: %s\n", user_password_auth, password);
-
-            if (strcmp(password, user_password_auth) == 0)
+            int tentativas = 0;
+            while (1)
             {
-                // printf("LOGIN AUTORIZADO\n");
-                char msg_login_sucess[] = "\n Bem vind@ ";
-                strcat(msg_login_sucess, username);
-                strcat(msg_login_sucess, "\n\n");
-                send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
+                // Pedir password
+                char msg_get_password[] = "\n Password: ";
+                send(client_fd, msg_get_password, strlen(msg_get_password), 0);
                 fflush(stdout);
-                option = 0;
-            }
-            else
-            {
-                // printf("PASSWORD ERRADA\n");
-                char msg_get_password_error[] = "  Password Incorrreta\n";
-                send(client_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
-                fflush(stdout);
-                option = -1;
+
+                // Receber password inserido
+                char password[BUF_SIZE];
+                ssize_t size_password = recv(client_fd, password, BUF_SIZE, 0);
+                password[size_password - 2] = '\0';
+                // printf("Recebidos %ld bytes\n", size_password);
+
+                // printf("file: %s\ninserida: %s\n", user_password_auth, password);
+
+                if (strcmp(password, user_password_auth) == 0)
+                {
+                    // printf("LOGIN AUTORIZADO\n");
+                    char msg_login_sucess[] = "\n Bem vind@ ";
+                    strcat(msg_login_sucess, username);
+                    strcat(msg_login_sucess, "\n\n");
+                    send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
+                    fflush(stdout);
+                    option = 0;
+                    break;
+                }
+                else
+                {
+                    // printf("PASSWORD ERRADA\n");
+                    tentativas++;
+                    char msg_get_password_error[] = "  Password Incorrreta. ";
+                    char ten = (3 - tentativas) + '0';
+                    char tenta[2] = "";
+                    tenta[0] = ten;
+                    strcat(msg_get_password_error, tenta);
+                    strcat(msg_get_password_error, " tentativas restantes!\n");
+                    send(client_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
+                    fflush(stdout);
+                    // printf("%dº tentativa\n", tentativas);
+                    if (tentativas == 3)
+                    {
+                        option = -1;
+                        break;
+                    }
+                }
             }
         }
     }

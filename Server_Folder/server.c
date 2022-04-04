@@ -65,22 +65,26 @@ int main(int argc, char *argv[])
 // telnet 127.0.0.1 9876
 void process_client(int client_fd)
 {
-    // Login de Clientes
-    char username[BUF_SIZE] = "";
-    login(client_fd, username);
-
-    if (strcmp(username, "admin") == 0)
+    while (1)
     {
-        // printf("Login Admin\n");
-        menu_admin(client_fd);
-    }
-    else
-    {
-        // printf("Login Cliente\n");
-        menu_client(client_fd, username);
-    }
 
-    close(client_fd);
+        // Login
+        char username[BUF_SIZE] = "";
+        login(client_fd, username);
+
+        if (strcmp(username, "admin") == 0)
+        {
+            // printf("Login Admin\n");
+            menu_admin(client_fd);
+        }
+        else
+        {
+            // printf("Login Cliente\n");
+            menu_client(client_fd, username);
+        }
+
+        // close(client_fd);
+    }
 }
 
 void erro(char *msg)
@@ -157,7 +161,7 @@ void login(int client_fd, char username[])
                 if (strcmp(password, user_password_auth) == 0)
                 {
                     // printf("LOGIN AUTORIZADO\n");
-                    char msg_login_sucess[] = "\n     Bem vind@ ";
+                    char msg_login_sucess[] = "\n             Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
                     send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
@@ -269,6 +273,50 @@ void menu_admin(int admin_fd)
         }
         else if (option[0] == '3') // Remover do ficheiro
         {
+            file_words = fopen("words.txt", "r");
+            FILE *file_words_new;
+            file_words_new = fopen("words_aux.txt", "wt+");
+
+            // Printf remover
+            char menu_remover[] = "\n==========================================\n               REMOVER\n\n";
+            send(admin_fd, menu_remover, strlen(menu_remover), 0);
+            fflush(stdout);
+
+            char word_to_delete[BUF_SIZE] = "";
+            // ssize_t size_new_word =
+            recv(admin_fd, word_to_delete, BUF_SIZE - 1, 0);
+            fflush(stdout);
+            // strcat(word_to_delete, "\n");
+            //  printf("Word to delete <>%s\n", word_to_delete);
+            //  fflush(stdout);
+
+            // Escrever no ficheiro auxiliar
+            while (fgets(word, sizeof(word), file_words))
+            {
+                // printf("%s<>%s|%d|\n\n", word, word_to_delete, strcmp(word_to_delete, word));
+                // printf("%s<>%s|%d|\n\n", word, word_to_delete, strncmp(word_to_delete, word, strlen(word_to_delete) - 1));
+                if (strcmp(word_to_delete, word) != 0)
+                {
+                    // printf("%s", word);
+                    fwrite(word, sizeof(char), strlen(word), file_words_new);
+                    fflush(stdout);
+                }
+            }
+            fclose(file_words);
+
+            file_words = fopen("words.txt", "wt");
+            // printf("fora do ciclo:%s", word);
+            fseek(file_words_new, 0, SEEK_SET);
+            while (fgets(word, sizeof(word), file_words_new))
+            {
+                // printf("%s", word);
+                // printf("ESTOU AQUI");
+                fwrite(word, sizeof(char), strlen(word), file_words);
+                fflush(stdout);
+            }
+
+            fclose(file_words_new);
+            fclose(file_words);
         }
         else if (option[0] == '4') // Sair ficheiro
         {
@@ -285,4 +333,3 @@ void menu_admin(int admin_fd)
         }*/
     }
 }
-

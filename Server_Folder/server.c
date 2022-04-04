@@ -157,7 +157,7 @@ void login(int client_fd, char username[])
                 if (strcmp(password, user_password_auth) == 0)
                 {
                     // printf("LOGIN AUTORIZADO\n");
-                    char msg_login_sucess[] = "\n Bem vind@ ";
+                    char msg_login_sucess[] = "\n     Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
                     send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
@@ -207,52 +207,69 @@ void menu_client(int client_fd, char username[])
 // ==================== Menu Admin ====================
 void menu_admin(int admin_fd)
 {
-    char menu_admin[] = "\n==========================================\n             MENU ADMIN\n\n";
-    send(admin_fd, menu_admin, strlen(menu_admin), 0);
-    fflush(stdout);
-
-    char admin_options[] = "  (1) Consultar\n  (2) Adicionar\n  (3) Remover\n  (4) Sair\n\n";
-    send(admin_fd, admin_options, strlen(admin_options), 0);
-    fflush(stdout);
-
-    char option[2];
-    recv(admin_fd, option, 2, 0);
-    fflush(stdout);
-
-    // printf("Selecionou a opção %c", option[0]);
-    // printf("Foi lido isto -> %s", option);
-
-    FILE *file_words;
-    char word[BUF_SIZE];
-    if (option[0] == '1')
+    while (1)
     {
-        file_words = fopen("words.txt", "r");
+        // Print Menu
+        char menu_admin[] = "\n==========================================\n               MENU ADMIN\n\n";
+        send(admin_fd, menu_admin, strlen(menu_admin), 0);
+        fflush(stdout);
 
-        while (fgets(word, sizeof(word), file_words))
+        char admin_options[] = "  (1) Consultar\n  (2) Adicionar\n  (3) Remover\n  (4) Sair\n\n";
+        send(admin_fd, admin_options, strlen(admin_options), 0);
+        fflush(stdout);
+
+        // Escolher o que fazer
+        char option[BUF_SIZE] = "";
+        ssize_t size_choice = recv(admin_fd, option, BUF_SIZE - 1, 0);
+        // printf("Chegaram %ld bytes\n", size_choice);
+        // fflush(stdout);
+        option[size_choice - 2] = '\0';
+        // printf("Recebi->%s<>\n", option);
+        fflush(stdout);
+
+        // Preparar manipulação de ficheiro
+        FILE *file_words;
+        char word[BUF_SIZE];
+
+        if (option[0] == '1') // Consultar ficheiro
         {
-            // word[strlen(word) - 1] = '\0';
-            send(admin_fd, word, strlen(word), 0);
+            file_words = fopen("words.txt", "r");
+
+            // Printf escolha
+            char menu_consulta[] = "\n==========================================\n               CONSULTAR\n\n";
+            send(admin_fd, menu_consulta, strlen(menu_consulta), 0);
             fflush(stdout);
-            // printf("%s\n", word);
+
+            while (fgets(word, sizeof(word), file_words))
+            {
+                // word[strlen(word) - 1] = '\0';
+                send(admin_fd, word, strlen(word), 0);
+                fflush(stdout);
+                // printf("%s\n", word);
+            }
+
+            fflush(stdout);
+
+            fclose(file_words);
         }
-
-        fflush(stdout);
-
-        fclose(file_words);
-    }
-    else if (option[0] == '2')
-    {
-    }
-    else if (option[0] == '3')
-    {
-    }
-    else if (option[0] == '4')
-    {
-        char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
-        send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);
-        fflush(stdout);
-    }
-    else
-    {
+        else if (option[0] == '2') // Adicionar ao ficheiro
+        {
+        }
+        else if (option[0] == '3') // Remover do ficheiro
+        {
+        }
+        else if (option[0] == '4') // Sair ficheiro
+        {
+            char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
+            send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);
+            fflush(stdout);
+            break;
+        }
+        /*else
+        {
+            char menu_admin_error[] = " Opção inválida\n";
+            send(admin_fd, menu_admin_error, strlen(menu_admin_error), 0);
+            fflush(stdout);
+        }*/
     }
 }

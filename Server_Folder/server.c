@@ -14,8 +14,12 @@
 
 void process_client(int fd);
 void erro(char *msg);
-// Login de clientes
-void client_login(int client_fd, char username[]);
+// Login
+void login(int client_fd, char username[]);
+// Menu Client
+void menu_client(int client_fd, char username[]);
+// Menu Admin
+void menu_admin(int admin_fd, char username[]);
 
 int main(int argc, char *argv[])
 {
@@ -57,28 +61,23 @@ int main(int argc, char *argv[])
     return 0;
 }
 
+// ==================== Process Client ====================
 // telnet 127.0.0.1 9876
 void process_client(int client_fd)
 {
-    // nread -> nº de caracteres lidos (incluindo \n e \0)
-    // ssize_t nread = 0;
-    // char buffer[BUF_SIZE] = "";
-
-    /*nread = read(client_fd, buffer, BUF_SIZE);
-    buffer[nread] = '\0';
-
-    for (int i = 0; i <= nread; i++)
-        printf("(%c,%d)", buffer[i], i);
-
-    fflush(stdout);
-
-    printf("\n%s<->%ld\n", buffer, nread);*/
-
     // Login de Clientes
     char username[BUF_SIZE] = "";
-    client_login(client_fd, username);
+    login(client_fd, username);
 
-    fflush(stdout);
+    if (strcmp(username, "admin") == 0)
+    {
+        // printf("Login Admin\n");
+    }
+    else
+    {
+        // printf("Login Cliente\n");
+        menu_client(client_fd, username);
+    }
 
     close(client_fd);
 }
@@ -89,8 +88,8 @@ void erro(char *msg)
     exit(-1);
 }
 
-// Return 0 if OK,-1 if error
-void client_login(int client_fd, char username[])
+// ==================== Login ====================
+void login(int client_fd, char username[])
 {
     char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
     write(client_fd, msg_inicial, strlen(msg_inicial));
@@ -187,4 +186,24 @@ void client_login(int client_fd, char username[])
             }
         }
     }
+}
+
+// ==================== Menu Client ====================
+void menu_client(int client_fd, char username[])
+{
+    char menu_client[] = "\n==========================================\n                  MENU\n\n";
+    send(client_fd, menu_client, strlen(menu_client), 0);
+    fflush(stdout);
+
+    char lixo[BUF_SIZE];
+    recv(client_fd, lixo, BUF_SIZE, 0);
+
+    char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
+    send(client_fd, menu_client_logout, strlen(menu_client_logout), 0);
+    fflush(stdout);
+}
+
+// ==================== Menu Admin ====================
+void menu_admin(int admin_fd, char username[])
+{
 }

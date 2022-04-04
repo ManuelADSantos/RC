@@ -2,3 +2,6 @@
 .gitignore
 *.bin
 server
+testes.c
+testes
+*.txt

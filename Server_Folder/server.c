@@ -9,18 +9,27 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 
+/*-----------------------------------------------------------------------
+                                MACROS
+-----------------------------------------------------------------------*/
 #define SERVER_PORT 9876
 #define BUF_SIZE 1024
 
+/*-----------------------------------------------------------------------
+                              PROTÓTIPOS
+-----------------------------------------------------------------------*/
 void process_client(int fd);
 void erro(char *msg);
-// Login
+// /----------/ Login /----------/
 void login(int client_fd, char username[]);
-// Menu Client
+// /----------/ Menu Client /----------/
 void menu_client(int client_fd, char username[]);
-// Menu Admin
+// /----------/ Menu Admin /----------/
 void menu_admin(int admin_fd);
 
+/*-----------------------------------------------------------------------
+                                MAIN
+-----------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     int fd, client;
@@ -61,39 +70,43 @@ int main(int argc, char *argv[])
     return 0;
 }
 
-// ==================== Process Client ====================
-// telnet 127.0.0.1 9876
+/*-----------------------------------------------------------------------
+                            PROCESS CLIENT
+-----------------------------------------------------------------------*/
 void process_client(int client_fd)
 {
     while (1)
     {
 
-        // Login
+        // /----------/ Login /----------/
         char username[BUF_SIZE] = "";
         login(client_fd, username);
 
         if (strcmp(username, "admin") == 0)
         {
-            // printf("Login Admin\n");
+            // /----------/ Menu Admin /----------/
             menu_admin(client_fd);
         }
         else
         {
-            // printf("Login Cliente\n");
+            // /----------/ Menu Client /----------/
             menu_client(client_fd, username);
         }
-
-        // close(client_fd);
     }
 }
 
+/*-----------------------------------------------------------------------
+                                ERRO
+-----------------------------------------------------------------------*/
 void erro(char *msg)
 {
     printf("Erro: %s\n", msg);
     exit(-1);
 }
 
-// ==================== Login ====================
+/*-----------------------------------------------------------------------
+                                LOGIN
+-----------------------------------------------------------------------*/
 void login(int client_fd, char username[])
 {
     char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
@@ -102,12 +115,12 @@ void login(int client_fd, char username[])
     int option = -1;
     while (option == -1)
     {
-        // Enviar print de pedido do username
+        // /----------/ Enviar print de pedido do username /----------/
         char msg_get_user[] = "\n Username: ";
         send(client_fd, msg_get_user, strlen(msg_get_user), 0);
         fflush(stdout);
 
-        // Receber username inserido
+        // /----------/ Receber username inserido /----------/
         ssize_t size_user = recv(client_fd, username, BUF_SIZE, 0);
         username[size_user - 2] = '\0';
 
@@ -118,7 +131,7 @@ void login(int client_fd, char username[])
 
         if ((file_user = fopen(filename_user, "r")) == NULL)
         {
-            // Caso não exista o username em causa
+            // /----------/ Caso não exista o username em causa /----------/
             char msg_get_user_error[] = "  Username não existe. Insira um username válido\n";
             send(client_fd, msg_get_user_error, strlen(msg_get_user_error), 0);
             fflush(stdout);
@@ -126,7 +139,7 @@ void login(int client_fd, char username[])
         }
         else
         {
-            // Existe username em causa
+            // /----------/ Existe username em causa /----------/
             char user_password_auth[BUF_SIZE] = "";
             fread(user_password_auth, sizeof(user_password_auth), 1, file_user);
             fflush(stdout);
@@ -134,24 +147,24 @@ void login(int client_fd, char username[])
             int tentativas = 0;
             while (1)
             {
-                // Pedir password
+                // /----------/ Pedir password /----------/
                 char msg_get_password[] = "\n Password: ";
                 send(client_fd, msg_get_password, strlen(msg_get_password), 0);
                 fflush(stdout);
 
-                // Receber password inserido
+                // /----------/ Receber password inserido /----------/
                 char password[BUF_SIZE] = "";
                 ssize_t size_password = recv(client_fd, password, BUF_SIZE, 0);
                 fflush(stdout);
                 password[size_password - 2] = '\0';
 
                 // DEBUG
-                printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, user_password_auth), password, user_password_auth);
-                fflush(stdout);
+                /*printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, user_password_auth), password, user_password_auth);
+                fflush(stdout);*/
 
                 if (strcmp(password, user_password_auth) == 0)
                 {
-                    // printf("LOGIN AUTORIZADO\n");
+                    // /----------/ LOGIN AUTORIZADO /----------/
                     char msg_login_sucess[] = "\n             Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
@@ -162,8 +175,7 @@ void login(int client_fd, char username[])
                 }
                 else
                 {
-                    // printf("PASSWORD ERRADA\n");
-
+                    // /----------/ PASSWORD ERRADA /----------/
                     printf("%s\n", password);
                     fflush(stdout);
 
@@ -187,7 +199,9 @@ void login(int client_fd, char username[])
     }
 }
 
-// ==================== Menu Client ====================
+/*-----------------------------------------------------------------------
+                              MENU CLIENT
+-----------------------------------------------------------------------*/
 void menu_client(int client_fd, char username[])
 {
     char menu_client[] = "\n==========================================\n                  MENU\n\n";
@@ -202,12 +216,14 @@ void menu_client(int client_fd, char username[])
     fflush(stdout);
 }
 
-// ==================== Menu Admin ====================
+/*-----------------------------------------------------------------------
+                             MENU ADMIN
+-----------------------------------------------------------------------*/
 void menu_admin(int admin_fd)
 {
     while (1)
     {
-        // Print Menu
+        // /----------/ Print Menu /----------/
         char menu_admin[] = "\n==========================================\n               MENU ADMIN\n\n";
         send(admin_fd, menu_admin, strlen(menu_admin), 0);
         fflush(stdout);
@@ -216,13 +232,13 @@ void menu_admin(int admin_fd)
         send(admin_fd, admin_options, strlen(admin_options), 0);
         fflush(stdout);
 
-        // Escolher o que fazer
+        // /----------/ Escolher o que fazer /----------/
         char option[BUF_SIZE] = "";
         ssize_t size_choice = recv(admin_fd, option, BUF_SIZE - 1, 0);
         option[size_choice - 2] = '\0';
         fflush(stdout);
 
-        // Preparar manipulação de ficheiro
+        // /----------/ Preparar manipulação de ficheiro /----------/
         FILE *file_words;
         char word[BUF_SIZE];
 
@@ -230,7 +246,7 @@ void menu_admin(int admin_fd)
         {
             file_words = fopen("words.txt", "r");
 
-            // Printf escolha
+            // /----------/ Printf escolha /----------/
             char menu_consulta[] = "\n==========================================\n               CONSULTAR\n\n";
             send(admin_fd, menu_consulta, strlen(menu_consulta), 0);
             fflush(stdout);
@@ -247,7 +263,7 @@ void menu_admin(int admin_fd)
         {
             file_words = fopen("words.txt", "a");
 
-            // Printf escolha
+            // /----------/ Printf escolha /----------/
             char menu_adicionar[] = "\n==========================================\n               ADICIONAR\n\n";
             send(admin_fd, menu_adicionar, strlen(menu_adicionar), 0);
             fflush(stdout);
@@ -265,7 +281,7 @@ void menu_admin(int admin_fd)
             FILE *file_words_aux;
             file_words_aux = fopen("words_aux.txt", "wt+");
 
-            // Printf remover
+            // /----------/ Printf remover /----------/
             char menu_remover[] = "\n==========================================\n               REMOVER\n\n";
             send(admin_fd, menu_remover, strlen(menu_remover), 0);
             fflush(stdout);
@@ -274,7 +290,7 @@ void menu_admin(int admin_fd)
             recv(admin_fd, word_to_delete, BUF_SIZE - 1, 0);
             fflush(stdout);
 
-            // Escrever no ficheiro auxiliar
+            // /----------/ Escrever no ficheiro auxiliar /----------/
             while (fgets(word, sizeof(word), file_words))
             {
                 if (strcmp(word_to_delete, word) != 0)

@@ -104,28 +104,17 @@ void login(int client_fd, char username[])
     {
         // Enviar print de pedido do username
         char msg_get_user[] = "\n Username: ";
-        // ssize_t size_msg_user =
         send(client_fd, msg_get_user, strlen(msg_get_user), 0);
         fflush(stdout);
-        // printf("Enviados %ld bytes\n", size_msg_user);
-        // fflush(stdout);
 
         // Receber username inserido
         ssize_t size_user = recv(client_fd, username, BUF_SIZE, 0);
         username[size_user - 2] = '\0';
-        // printf("Recebidos %ld bytes\n", size_user);
-
-        // DEBUG
-        // printf("\n%s<->%ld\n", username, strlen(username));
-        // fflush(stdout);
 
         FILE *file_user;
         char filename_user[BUF_SIZE];
         strcpy(filename_user, username);
         strcat(filename_user, ".txt");
-
-        // DEBUG
-        // printf("%s\n", filename_user);
 
         if ((file_user = fopen(filename_user, "r")) == NULL)
         {
@@ -138,7 +127,7 @@ void login(int client_fd, char username[])
         else
         {
             // Existe username em causa
-            char user_password_auth[BUF_SIZE];
+            char user_password_auth[BUF_SIZE] = "";
             fread(user_password_auth, sizeof(user_password_auth), 1, file_user);
             fflush(stdout);
 
@@ -151,12 +140,14 @@ void login(int client_fd, char username[])
                 fflush(stdout);
 
                 // Receber password inserido
-                char password[BUF_SIZE];
+                char password[BUF_SIZE] = "";
                 ssize_t size_password = recv(client_fd, password, BUF_SIZE, 0);
+                fflush(stdout);
                 password[size_password - 2] = '\0';
-                // printf("Recebidos %ld bytes\n", size_password);
 
-                // printf("file: %s\ninserida: %s\n", user_password_auth, password);
+                // DEBUG
+                printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, user_password_auth), password, user_password_auth);
+                fflush(stdout);
 
                 if (strcmp(password, user_password_auth) == 0)
                 {
@@ -172,6 +163,10 @@ void login(int client_fd, char username[])
                 else
                 {
                     // printf("PASSWORD ERRADA\n");
+
+                    printf("%s\n", password);
+                    fflush(stdout);
+
                     tentativas++;
                     char msg_get_password_error[] = "  Password Incorrreta. ";
                     char ten = (3 - tentativas) + '0';
@@ -181,7 +176,6 @@ void login(int client_fd, char username[])
                     strcat(msg_get_password_error, " tentativas restantes!\n");
                     send(client_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
                     fflush(stdout);
-                    // printf("%dº tentativa\n", tentativas);
                     if (tentativas == 3)
                     {
                         option = -1;
@@ -225,10 +219,7 @@ void menu_admin(int admin_fd)
         // Escolher o que fazer
         char option[BUF_SIZE] = "";
         ssize_t size_choice = recv(admin_fd, option, BUF_SIZE - 1, 0);
-        // printf("Chegaram %ld bytes\n", size_choice);
-        // fflush(stdout);
         option[size_choice - 2] = '\0';
-        // printf("Recebi->%s<>\n", option);
         fflush(stdout);
 
         // Preparar manipulação de ficheiro
@@ -246,10 +237,8 @@ void menu_admin(int admin_fd)
 
             while (fgets(word, sizeof(word), file_words))
             {
-                // word[strlen(word) - 1] = '\0';
                 send(admin_fd, word, strlen(word), 0);
                 fflush(stdout);
-                // printf("%s\n", word);
             }
 
             fclose(file_words);
@@ -264,7 +253,6 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             char new_word[BUF_SIZE] = "";
-            // ssize_t size_new_word =
             recv(admin_fd, new_word, BUF_SIZE - 1, 0);
             fwrite(new_word, sizeof(char), strlen(new_word), file_words);
             fflush(stdout);
@@ -274,8 +262,8 @@ void menu_admin(int admin_fd)
         else if (option[0] == '3') // Remover do ficheiro
         {
             file_words = fopen("words.txt", "r");
-            FILE *file_words_new;
-            file_words_new = fopen("words_aux.txt", "wt+");
+            FILE *file_words_aux;
+            file_words_aux = fopen("words_aux.txt", "wt+");
 
             // Printf remover
             char menu_remover[] = "\n==========================================\n               REMOVER\n\n";
@@ -283,39 +271,30 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             char word_to_delete[BUF_SIZE] = "";
-            // ssize_t size_new_word =
             recv(admin_fd, word_to_delete, BUF_SIZE - 1, 0);
             fflush(stdout);
-            // strcat(word_to_delete, "\n");
-            //  printf("Word to delete <>%s\n", word_to_delete);
-            //  fflush(stdout);
 
             // Escrever no ficheiro auxiliar
             while (fgets(word, sizeof(word), file_words))
             {
-                // printf("%s<>%s|%d|\n\n", word, word_to_delete, strcmp(word_to_delete, word));
-                // printf("%s<>%s|%d|\n\n", word, word_to_delete, strncmp(word_to_delete, word, strlen(word_to_delete) - 1));
                 if (strcmp(word_to_delete, word) != 0)
                 {
-                    // printf("%s", word);
-                    fwrite(word, sizeof(char), strlen(word), file_words_new);
+                    fwrite(word, sizeof(char), strlen(word), file_words_aux);
                     fflush(stdout);
                 }
             }
             fclose(file_words);
 
             file_words = fopen("words.txt", "wt");
-            // printf("fora do ciclo:%s", word);
-            fseek(file_words_new, 0, SEEK_SET);
-            while (fgets(word, sizeof(word), file_words_new))
+            fseek(file_words_aux, 0, SEEK_SET);
+            while (fgets(word, sizeof(word), file_words_aux))
             {
-                // printf("%s", word);
-                // printf("ESTOU AQUI");
                 fwrite(word, sizeof(char), strlen(word), file_words);
                 fflush(stdout);
             }
 
-            fclose(file_words_new);
+            fclose(file_words_aux);
+            remove("words_aux.txt");
             fclose(file_words);
         }
         else if (option[0] == '4') // Sair ficheiro
@@ -325,11 +304,5 @@ void menu_admin(int admin_fd)
             fflush(stdout);
             break;
         }
-        /*else
-        {
-            char menu_admin_error[] = " Opção inválida\n";
-            send(admin_fd, menu_admin_error, strlen(menu_admin_error), 0);
-            fflush(stdout);
-        }*/
     }
 }

@@ -21,11 +21,11 @@ int main(int argc, char *argv[])
     struct sockaddr_in addr;
     struct hostent *hostPtr;
 
-    if (argc != 4)
+    /*if (argc != 4)
     {
         printf("cliente <host> <port> <string>\n");
         exit(-1);
-    }
+    }*/
 
     strcpy(endServer, argv[1]);
     if ((hostPtr = gethostbyname(endServer)) == 0)
@@ -40,16 +40,12 @@ int main(int argc, char *argv[])
         erro("socket");
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         erro("Connect");
-    write(fd, argv[3], 1 + strlen(argv[3]));
 
-    // ========== Ex1 ==========
-    int tamanho = 1 + strlen(argv[3]);
-    char aux[tamanho];
-    read(fd, aux, tamanho);
-    printf("%s\n", aux);
-    // =========================
+    // write(fd, argv[3], 1 + strlen(argv[3]));
 
-    close(fd);
+    char
+
+        close(fd);
     exit(0);
 }
 

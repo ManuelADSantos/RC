@@ -5,4 +5,5 @@
 server
 testes.c
 testes
+client
 *.txt

@@ -110,7 +110,8 @@ void erro(char *msg)
 void login(int client_fd, char username[])
 {
     char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
-    write(client_fd, msg_inicial, strlen(msg_inicial));
+    send(client_fd, msg_inicial, strlen(msg_inicial), 0);
+    fflush(stdout);
 
     int option = -1;
     while (option == -1)

@@ -232,7 +232,8 @@ void menu_admin(int admin_fd)
         char admin_options[] = "        (1) Consultar Palavras\n\
         (2) Adicionar Palavra\n\
         (3) Remover Palavra\n\
-        (4) Sair\n\n";
+        (4) Adicionar Utilzador\n\
+        (5) Sair\n\n ";
         send(admin_fd, admin_options, strlen(admin_options), 0);
         fflush(stdout);
 
@@ -246,12 +247,13 @@ void menu_admin(int admin_fd)
         FILE *file_words;
         char word[BUF_SIZE];
 
-        if (option[0] == '1') // Consultar ficheiro
+        // /====================/ (1) Consultar palavras no ficheiro /====================/
+        if (option[0] == '1')
         {
             file_words = fopen("words.txt", "r");
 
             // /----------/ Printf escolha /----------/
-            char menu_consulta[] = "\n==========================================\n               CONSULTAR\n\n";
+            char menu_consulta[] = "\n==========================================\n      CONSULTAR PALAVRAS\n\n";
             send(admin_fd, menu_consulta, strlen(menu_consulta), 0);
             fflush(stdout);
 
@@ -263,12 +265,13 @@ void menu_admin(int admin_fd)
 
             fclose(file_words);
         }
-        else if (option[0] == '2') // Adicionar ao ficheiro
+        // /====================/ (2) Adicionar palavra ao ficheiro /====================/
+        else if (option[0] == '2')
         {
             file_words = fopen("words.txt", "a");
 
             // /----------/ Printf escolha /----------/
-            char menu_adicionar[] = "\n==========================================\n               ADICIONAR\n\n";
+            char menu_adicionar[] = "\n==========================================\n       ADICIONAR PALAVRA\n\n";
             send(admin_fd, menu_adicionar, strlen(menu_adicionar), 0);
             fflush(stdout);
 
@@ -279,14 +282,15 @@ void menu_admin(int admin_fd)
 
             fclose(file_words);
         }
-        else if (option[0] == '3') // Remover do ficheiro
+        // /====================/ (3) Remover palavra do ficheiro /====================/
+        else if (option[0] == '3')
         {
             file_words = fopen("words.txt", "r");
             FILE *file_words_aux;
             file_words_aux = fopen("words_aux.txt", "wt+");
 
             // /----------/ Printf remover /----------/
-            char menu_remover[] = "\n==========================================\n               REMOVER\n\n";
+            char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
             send(admin_fd, menu_remover, strlen(menu_remover), 0);
             fflush(stdout);
 
@@ -317,7 +321,27 @@ void menu_admin(int admin_fd)
             remove("words_aux.txt");
             fclose(file_words);
         }
-        else if (option[0] == '4') // Sair ficheiro
+        // /====================/ (4) Adicinar utilizador /====================/
+        else if (option[0] == '4')
+        {
+            char menu_admin_add_user[] = "\n==========================================\n    ADICIONAR UTILIZADOR\n\n";
+            send(admin_fd, menu_admin_add_user, strlen(menu_admin_add_user), 0);
+            fflush(stdout);
+            // /----------/ Enviar print de pedido do novo username /----------/
+            char msg_get_new_user[] = "\n New username: ";
+            send(admin_fd, msg_get_new_user, strlen(msg_get_new_user), 0);
+            fflush(stdout);
+
+            // /----------/ Receber novo username inserido /----------/
+            char new_username[BUF_SIZE] = "";
+            ssize_t size_user = recv(admin_fd, new_username, BUF_SIZE - 1, 0);
+            new_username[size_user - 2] = '\0';
+
+            // DEBUG
+            printf("new user:%s\n", new_username);
+        }
+        // /====================/ (5) Sair ficheiro /====================/
+        else if (option[0] == '5')
         {
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
             send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);

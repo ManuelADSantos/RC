@@ -233,7 +233,8 @@ void menu_admin(int admin_fd)
         (2) Adicionar Palavra\n\
         (3) Remover Palavra\n\
         (4) Adicionar Utilzador\n\
-        (5) Sair\n\n ";
+        (5) Remover Utilzador\n\
+        (6) Sair\n\n ";
         send(admin_fd, admin_options, strlen(admin_options), 0);
         fflush(stdout);
 
@@ -375,8 +376,96 @@ void menu_admin(int admin_fd)
                 fflush(stdout);
             }
         }
-        // /====================/ (5) Sair ficheiro /====================/
+        // /====================/ (5) Remover utilizador /====================/
         else if (option[0] == '5')
+        {
+            char menu_admin_remove_user[] = "\n==========================================\n        REMOVER UTILIZADOR\n\n";
+            send(admin_fd, menu_admin_remove_user, strlen(menu_admin_remove_user), 0);
+            fflush(stdout);
+
+            // /----------/ Enviar print de pedido do novo username /----------/
+            char msg_get_remove_user[] = "\n Username to remove: ";
+            send(admin_fd, msg_get_remove_user, strlen(msg_get_remove_user), 0);
+            fflush(stdout);
+
+            // /----------/ Receber novo username inserido /----------/
+            char remove_username[BUF_SIZE] = "";
+            ssize_t size_user_remove = recv(admin_fd, remove_username, BUF_SIZE - 1, 0);
+            remove_username[size_user_remove - 2] = '\0';
+
+            // DEBUG
+            // printf("new user->%s<-\n", remove_username);
+
+            strcat(remove_username, ".txt");
+
+            if (fopen(remove_username, "r") == NULL)
+            {
+                // DEBUG
+                // printf("User não existe\n");
+                char msg_get_remove_user_dont_exist[] = "\n User does not exist";
+                send(admin_fd, msg_get_remove_user_dont_exist, strlen(msg_get_remove_user_dont_exist), 0);
+                fflush(stdout);
+            }
+            else
+            {
+                FILE *admin_auth;
+                char admin_pass[BUF_SIZE] = "";
+                admin_auth = fopen("admin.txt", "r");
+                fread(admin_pass, sizeof(admin_pass), 1, admin_auth);
+                fclose(admin_auth);
+
+                int tentativas = 0;
+                while (1)
+                {
+                    // /----------/ Pedir password /----------/
+                    char msg_get_password[] = "\n Admin password: ";
+                    send(admin_fd, msg_get_password, strlen(msg_get_password), 0);
+                    fflush(stdout);
+
+                    // /----------/ Receber password inserido /----------/
+                    char password[BUF_SIZE] = "";
+                    ssize_t size_password = recv(admin_fd, password, BUF_SIZE, 0);
+                    fflush(stdout);
+                    password[size_password - 2] = '\0';
+
+                    // DEBUG
+                    printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, admin_pass), password, admin_pass);
+                    fflush(stdout);
+
+                    if (strcmp(password, admin_pass) == 0)
+                    {
+                        // /----------/ LOGIN AUTORIZADO /----------/
+                        char msg_remove_user_sucess[] = "\n User removed";
+                        send(admin_fd, msg_remove_user_sucess, strlen(msg_remove_user_sucess), 0);
+                        fflush(stdout);
+
+                        remove(remove_username);
+
+                        break;
+                    }
+                    else
+                    {
+                        // /----------/ PASSWORD ERRADA /----------/
+                        printf("%s\n", password);
+                        fflush(stdout);
+
+                        tentativas++;
+                        char msg_get_password_error[] = "  Password Incorrreta. ";
+                        char ten = (3 - tentativas) + '0';
+                        char tenta[2] = "";
+                        tenta[0] = ten;
+                        strcat(msg_get_password_error, tenta);
+                        strcat(msg_get_password_error, " tentativas restantes!\n");
+                        send(admin_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
+                        fflush(stdout);
+                        if (tentativas == 3)
+                            break;
+                    }
+                }
+            }
+        }
+        // /====================/ (6) Sair ficheiro /====================/
+        else if (option[0] == '6')
         {
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
             send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);

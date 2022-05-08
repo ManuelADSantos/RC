@@ -229,7 +229,10 @@ void menu_admin(int admin_fd)
         send(admin_fd, menu_admin, strlen(menu_admin), 0);
         fflush(stdout);
 
-        char admin_options[] = "  (1) Consultar\n  (2) Adicionar\n  (3) Remover\n  (4) Sair\n\n";
+        char admin_options[] = "        (1) Consultar Palavras\n\
+        (2) Adicionar Palavra\n\
+        (3) Remover Palavra\n\
+        (4) Sair\n\n";
         send(admin_fd, admin_options, strlen(admin_options), 0);
         fflush(stdout);
 

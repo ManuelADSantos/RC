@@ -12,6 +12,8 @@
 #include <unistd.h>
 #include <netdb.h>
 
+#define BUF_SIZE    1024
+
 void erro(char *msg);
 
 int main(int argc, char *argv[])
@@ -41,11 +43,38 @@ int main(int argc, char *argv[])
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         erro("Connect");
 
-    // write(fd, argv[3], 1 + strlen(argv[3]));
+    //Mensagem Inicial
 
-    char
+    char msg_inicial[BUF_SIZE];
+    recv(fd, msg_inicial, BUF_SIZE, 0);
+    printf("%s\n", msg_inicial);
 
-        close(fd);
+    //Mensagem a pedir username
+    char msg_get_user[BUF_SIZE];
+    recv(fd, msg_get_user, BUF_SIZE, 0);
+    printf("%s\n", msg_get_user);
+
+    //Enviar username
+    char username[BUF_SIZE];
+    scanf("%s", &username);
+    send(fd, username, strlen(username), 0);
+    fflush(stdout);
+
+    //Mensagem a pedir Password
+    char msg_get_password[BUF_SIZE];
+    recv(fd, msg_get_user, BUF_SIZE, 0);
+    printf("%s\n", msg_get_user);
+
+    //Enviar Passowrd
+    char password[BUF_SIZE];
+    scanf("%s", &password);
+    send(fd, username, strlen(password), 0);
+    fflush(stdout);
+
+
+
+
+    close(fd);
     exit(0);
 }
 

@@ -324,7 +324,7 @@ void menu_admin(int admin_fd)
         // /====================/ (4) Adicinar utilizador /====================/
         else if (option[0] == '4')
         {
-            char menu_admin_add_user[] = "\n==========================================\n    ADICIONAR UTILIZADOR\n\n";
+            char menu_admin_add_user[] = "\n==========================================\n        ADICIONAR UTILIZADOR\n\n";
             send(admin_fd, menu_admin_add_user, strlen(menu_admin_add_user), 0);
             fflush(stdout);
 
@@ -341,25 +341,39 @@ void menu_admin(int admin_fd)
             // DEBUG
             printf("new user->%s<-\n", new_username);
 
-            // /----------/ Enviar print de pedido da password do novo username /----------/
-            char msg_get_new_user_password[] = "\n New username password: ";
-            send(admin_fd, msg_get_new_user_password, strlen(msg_get_new_user_password), 0);
-            fflush(stdout);
-
-            // /----------/ Receber password do novo username inserido /----------/
-            char new_username_password[BUF_SIZE] = "";
-            ssize_t size_user_password = recv(admin_fd, new_username_password, BUF_SIZE - 1, 0);
-            new_username_password[size_user_password - 2] = '\0';
-
-            // DEBUG
-            printf("new user password->%s<-\n", new_username_password);
-
             FILE *file_new_user;
             strcat(new_username, ".txt");
-            file_new_user = fopen(new_username, "wt");
-            fwrite(new_username_password, sizeof(char), strlen(new_username_password), file_new_user);
-            fflush(stdout);
-            fclose(file_new_user);
+
+            // Username ainda não registado
+            if (fopen(new_username, "r") == NULL)
+            {
+                // /----------/ Enviar print de pedido da password do novo username /----------/
+                char msg_get_new_user_password[] = "\n New username password: ";
+                send(admin_fd, msg_get_new_user_password, strlen(msg_get_new_user_password), 0);
+                fflush(stdout);
+
+                // /----------/ Receber password do novo username inserido /----------/
+                char new_username_password[BUF_SIZE] = "";
+                ssize_t size_user_password = recv(admin_fd, new_username_password, BUF_SIZE - 1, 0);
+                new_username_password[size_user_password - 2] = '\0';
+
+                // DEBUG
+                printf("new user password->%s<-\n", new_username_password);
+
+                // /----------/ Receber password do novo username inserido /----------/
+                file_new_user = fopen(new_username, "wt");
+                fwrite(new_username_password, sizeof(char), strlen(new_username_password), file_new_user);
+                fflush(stdout);
+                fclose(file_new_user);
+            }
+            // Username já existe
+            else
+            {
+                printf("User já existe\n");
+                char msg_get_new_user_already_exists[] = "\n Username already exists";
+                send(admin_fd, msg_get_new_user_already_exists, strlen(msg_get_new_user_already_exists), 0);
+                fflush(stdout);
+            }
         }
         // /====================/ (5) Sair ficheiro /====================/
         else if (option[0] == '5')

@@ -206,12 +206,23 @@ void login(int client_fd, char username[])
 -----------------------------------------------------------------------*/
 void menu_client(int client_fd, char username[])
 {
+    // /----------/ Print Menu /----------/
     char menu_client[] = "\n==========================================\n                  MENU\n\n";
     send(client_fd, menu_client, strlen(menu_client), 0);
     fflush(stdout);
 
-    char lixo[BUF_SIZE];
-    recv(client_fd, lixo, BUF_SIZE, 0);
+    char client_options[] = "        (1) Utilizadores Online\n\
+        (2) Enviar Mensagem\n\
+        (3) Sair\n\n ";
+
+    send(client_fd, client_options, strlen(client_options), 0);
+    fflush(stdout);
+
+    // /----------/ Escolher o que fazer /----------/
+    char option[BUF_SIZE] = "";
+    ssize_t size_choice = recv(client_fd, option, BUF_SIZE, 0);
+    fflush(stdout);
+    option[size_choice - 2] = '\0';
 
     char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
     send(client_fd, menu_client_logout, strlen(menu_client_logout), 0);
@@ -426,15 +437,10 @@ void menu_admin(int admin_fd)
             ssize_t size_user_remove = recv(admin_fd, remove_username, BUF_SIZE, 0);
             remove_username[size_user_remove - 2] = '\0';
 
-            // DEBUG
-            // printf("new user->%s<-\n", remove_username);
-
             strcat(remove_username, ".txt");
 
             if (fopen(remove_username, "r") == NULL)
             {
-                // DEBUG
-                // printf("User não existe\n");
                 char msg_get_remove_user_dont_exist[] = "\n User does not exist";
                 send(admin_fd, msg_get_remove_user_dont_exist, strlen(msg_get_remove_user_dont_exist), 0);
                 fflush(stdout);
@@ -460,10 +466,6 @@ void menu_admin(int admin_fd)
                     ssize_t size_password = recv(admin_fd, password, BUF_SIZE, 0);
                     fflush(stdout);
                     password[size_password - 2] = '\0';
-
-                    // DEBUG
-                    /*printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, admin_pass), password, admin_pass);
-                    fflush(stdout);*/
 
                     if (strcmp(password, admin_pass) == 0)
                     {

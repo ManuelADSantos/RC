@@ -309,18 +309,14 @@ void menu_admin(int admin_fd)
                 fflush(stdout);
                 if (strcmp(word_to_delete, word) != 0)
                 {
-                    fflush(stdout);
                     fwrite(word, sizeof(char), strlen(word), file_words_aux);
                     fflush(stdout);
                 }
             }
             fclose(file_words);
-            fflush(stdout);
 
             file_words = fopen("words.txt", "wt");
-            fflush(stdout);
             fseek(file_words_aux, 0, SEEK_SET);
-            fflush(stdout);
             while (fgets(word, sizeof(word), file_words_aux))
             {
                 fflush(stdout);
@@ -329,9 +325,7 @@ void menu_admin(int admin_fd)
             }
 
             fclose(file_words_aux);
-            fflush(stdout);
             remove("words_aux.txt");
-            fflush(stdout);
             fclose(file_words);
             fflush(stdout);
         }
@@ -349,11 +343,9 @@ void menu_admin(int admin_fd)
 
             // /----------/ Receber novo username inserido /----------/
             char new_username[BUF_SIZE] = "";
-            ssize_t size_user = recv(admin_fd, new_username, BUF_SIZE - 1, 0);
+            ssize_t size_user = recv(admin_fd, new_username, BUF_SIZE, 0);
+            fflush(stdout);
             new_username[size_user - 2] = '\0';
-
-            // DEBUG
-            printf("new user->%s<-\n", new_username);
 
             FILE *file_new_user;
             strcat(new_username, ".txt");
@@ -368,11 +360,8 @@ void menu_admin(int admin_fd)
 
                 // /----------/ Receber password do novo username inserido /----------/
                 char new_username_password[BUF_SIZE] = "";
-                ssize_t size_user_password = recv(admin_fd, new_username_password, BUF_SIZE - 1, 0);
+                ssize_t size_user_password = recv(admin_fd, new_username_password, BUF_SIZE, 0);
                 new_username_password[size_user_password - 2] = '\0';
-
-                // DEBUG
-                printf("new user password->%s<-\n", new_username_password);
 
                 // /----------/ Receber password do novo username inserido /----------/
                 file_new_user = fopen(new_username, "wt");
@@ -403,7 +392,7 @@ void menu_admin(int admin_fd)
 
             // /----------/ Receber novo username inserido /----------/
             char remove_username[BUF_SIZE] = "";
-            ssize_t size_user_remove = recv(admin_fd, remove_username, BUF_SIZE - 1, 0);
+            ssize_t size_user_remove = recv(admin_fd, remove_username, BUF_SIZE, 0);
             remove_username[size_user_remove - 2] = '\0';
 
             // DEBUG

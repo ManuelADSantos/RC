@@ -240,8 +240,11 @@ void menu_admin(int admin_fd)
 
         // /----------/ Escolher o que fazer /----------/
         char option[BUF_SIZE] = "";
-        ssize_t size_choice = recv(admin_fd, option, BUF_SIZE - 1, 0);
+        ssize_t size_choice = recv(admin_fd, option, BUF_SIZE, 0);
+        fflush(stdout);
         option[size_choice - 2] = '\0';
+        fflush(stdout);
+        printf("choice->%s<\n", option);
         fflush(stdout);
 
         // /----------/ Preparar manipulação de ficheiro /----------/

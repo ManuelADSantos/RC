@@ -243,7 +243,6 @@ void menu_admin(int admin_fd)
         ssize_t size_choice = recv(admin_fd, option, BUF_SIZE, 0);
         fflush(stdout);
         option[size_choice - 2] = '\0';
-        fflush(stdout);
         printf("choice->%s<\n", option);
         fflush(stdout);
 
@@ -280,11 +279,13 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             char new_word[BUF_SIZE] = "";
-            recv(admin_fd, new_word, BUF_SIZE - 1, 0);
+            recv(admin_fd, new_word, BUF_SIZE, 0);
+            fflush(stdout);
             fwrite(new_word, sizeof(char), strlen(new_word), file_words);
             fflush(stdout);
 
             fclose(file_words);
+            fflush(stdout);
         }
         // /====================/ (3) Remover palavra do ficheiro /====================/
         else if (option[0] == '3')

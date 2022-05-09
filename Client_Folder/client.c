@@ -37,6 +37,7 @@ int main(int argc, char *argv[])
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         erro("Connect");
 
+    // ========== From here ==========
     pid_t pid = 0;
     if ((pid = fork()) == 0)
     // Child
@@ -73,6 +74,7 @@ int main(int argc, char *argv[])
     }
     close(fd);
     exit(0);
+    // ========== To Here ==========
 }
 
 void erro(char *msg)

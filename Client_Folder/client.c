@@ -67,6 +67,7 @@ int main(int argc, char *argv[])
                 scanf("%s", buffer_write);
                 send(fd, buffer_write, sizeof(buffer_write), 0);
                 fflush(stdout);
+                fflush(stdin);
 
                 sleep(1);
             }

@@ -300,31 +300,40 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             char word_to_delete[BUF_SIZE] = "";
-            recv(admin_fd, word_to_delete, BUF_SIZE - 1, 0);
+            recv(admin_fd, word_to_delete, BUF_SIZE, 0);
             fflush(stdout);
 
             // /----------/ Escrever no ficheiro auxiliar /----------/
             while (fgets(word, sizeof(word), file_words))
             {
+                fflush(stdout);
                 if (strcmp(word_to_delete, word) != 0)
                 {
+                    fflush(stdout);
                     fwrite(word, sizeof(char), strlen(word), file_words_aux);
                     fflush(stdout);
                 }
             }
             fclose(file_words);
+            fflush(stdout);
 
             file_words = fopen("words.txt", "wt");
+            fflush(stdout);
             fseek(file_words_aux, 0, SEEK_SET);
+            fflush(stdout);
             while (fgets(word, sizeof(word), file_words_aux))
             {
+                fflush(stdout);
                 fwrite(word, sizeof(char), strlen(word), file_words);
                 fflush(stdout);
             }
 
             fclose(file_words_aux);
+            fflush(stdout);
             remove("words_aux.txt");
+            fflush(stdout);
             fclose(file_words);
+            fflush(stdout);
         }
         // /====================/ (4) Adicinar utilizador /====================/
         else if (option[0] == '4')

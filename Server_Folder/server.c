@@ -243,8 +243,8 @@ void menu_admin(int admin_fd)
         ssize_t size_choice = recv(admin_fd, option, BUF_SIZE, 0);
         fflush(stdout);
         option[size_choice - 2] = '\0';
-        printf("choice->%s<\n", option);
-        fflush(stdout);
+        // printf("choice->%s<\n", option);
+        // fflush(stdout);
 
         // /----------/ Preparar manipulação de ficheiro /----------/
         FILE *file_words;
@@ -253,7 +253,7 @@ void menu_admin(int admin_fd)
         // /====================/ (1) Consultar palavras no ficheiro /====================/
         if (option[0] == '1')
         {
-            file_words = fopen("words.txt", "r");
+            file_words = fopen("words.txt", "a+");
 
             // /----------/ Printf escolha /----------/
             char menu_consulta[] = "\n==========================================\n      CONSULTAR PALAVRAS\n\n";
@@ -279,10 +279,26 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             char new_word[BUF_SIZE] = "";
-            recv(admin_fd, new_word, BUF_SIZE, 0);
+            recv(admin_fd, new_word, BUF_SIZE + 1, 0);
             fflush(stdout);
+
             fwrite(new_word, sizeof(char), strlen(new_word), file_words);
             fflush(stdout);
+
+            //========
+            int count = 0;
+            while (new_word[count] != '\n')
+                count++;
+
+            /*printf("count = %d || strlen = %ld\n", count, strlen(new_word));
+            fflush(stdout);*/
+
+            if ((int)strlen(new_word) - count != 1)
+            {
+                fwrite("\n", sizeof(char), 1, file_words);
+                fflush(stdout);
+            }
+            //========
 
             fclose(file_words);
             fflush(stdout);
@@ -325,7 +341,7 @@ void menu_admin(int admin_fd)
             }
 
             fclose(file_words_aux);
-            remove("words_aux.txt");
+            // remove("words_aux.txt");
             fclose(file_words);
             fflush(stdout);
         }

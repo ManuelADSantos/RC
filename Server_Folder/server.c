@@ -8,6 +8,7 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
 
 /*-----------------------------------------------------------------------
                                 MACROS
@@ -243,8 +244,6 @@ void menu_admin(int admin_fd)
         ssize_t size_choice = recv(admin_fd, option, BUF_SIZE, 0);
         fflush(stdout);
         option[size_choice - 2] = '\0';
-        // printf("choice->%s<\n", option);
-        // fflush(stdout);
 
         // /----------/ Preparar manipulação de ficheiro /----------/
         FILE *file_words;
@@ -253,53 +252,55 @@ void menu_admin(int admin_fd)
         // /====================/ (1) Consultar palavras no ficheiro /====================/
         if (option[0] == '1')
         {
-            file_words = fopen("words.txt", "a+");
-
             // /----------/ Printf escolha /----------/
             char menu_consulta[] = "\n==========================================\n      CONSULTAR PALAVRAS\n\n";
             send(admin_fd, menu_consulta, strlen(menu_consulta), 0);
             fflush(stdout);
 
+            // /----------/ Print Palavras /----------/
+            file_words = fopen("words.txt", "a+");
+            chmod("words.txt", 0777);
             while (fgets(word, sizeof(word), file_words))
             {
                 send(admin_fd, word, strlen(word), 0);
                 fflush(stdout);
             }
 
+            // /----------/ Fechar ficheiro /----------/
             fclose(file_words);
         }
         // /====================/ (2) Adicionar palavra ao ficheiro /====================/
         else if (option[0] == '2')
         {
-            file_words = fopen("words.txt", "a");
-
             // /----------/ Printf escolha /----------/
             char menu_adicionar[] = "\n==========================================\n       ADICIONAR PALAVRA\n\n";
             send(admin_fd, menu_adicionar, strlen(menu_adicionar), 0);
             fflush(stdout);
 
+            // /----------/ Recolher Palavra a Adicionar /----------/
             char new_word[BUF_SIZE] = "";
             recv(admin_fd, new_word, BUF_SIZE + 1, 0);
             fflush(stdout);
 
+            // /----------/ Escrever nova palavra no ficheiro /----------/
+            file_words = fopen("words.txt", "a");
+            chmod("words.txt", 0777);
             fwrite(new_word, sizeof(char), strlen(new_word), file_words);
             fflush(stdout);
 
-            //========
+            // /----------/ Ajustar \n /----------/
             int count = 0;
             while (new_word[count] != '\n')
                 count++;
 
-            /*printf("count = %d || strlen = %ld\n", count, strlen(new_word));
-            fflush(stdout);*/
-
             if ((int)strlen(new_word) - count != 1)
             {
-                fwrite("\n", sizeof(char), 1, file_words);
+                char aux[] = "\n";
+                fwrite(aux, sizeof(char), strlen(aux), file_words);
                 fflush(stdout);
             }
-            //========
 
+            // /----------/ Fechar ficheiro /----------/
             fclose(file_words);
             fflush(stdout);
         }
@@ -307,17 +308,30 @@ void menu_admin(int admin_fd)
         else if (option[0] == '3')
         {
             file_words = fopen("words.txt", "r");
+            chmod("words.txt", 0777);
             FILE *file_words_aux;
             file_words_aux = fopen("words_aux.txt", "wt+");
+            chmod("words_aux.txt", 0777);
 
             // /----------/ Printf remover /----------/
             char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
             send(admin_fd, menu_remover, strlen(menu_remover), 0);
             fflush(stdout);
 
+            // /----------/ Pedir palavra a remover (word\n) /----------/
             char word_to_delete[BUF_SIZE] = "";
             recv(admin_fd, word_to_delete, BUF_SIZE, 0);
             fflush(stdout);
+
+            // /----------/ Ajustar \n /----------/
+            int count = 0;
+            while (word_to_delete[count] != '\n')
+                count++;
+
+            if ((int)strlen(word_to_delete) - count != 1)
+            {
+                strcat(word_to_delete, "\n");
+            }
 
             // /----------/ Escrever no ficheiro auxiliar /----------/
             while (fgets(word, sizeof(word), file_words))
@@ -332,6 +346,7 @@ void menu_admin(int admin_fd)
             fclose(file_words);
 
             file_words = fopen("words.txt", "wt");
+            chmod("words.txt", 0777);
             fseek(file_words_aux, 0, SEEK_SET);
             while (fgets(word, sizeof(word), file_words_aux))
             {
@@ -447,8 +462,8 @@ void menu_admin(int admin_fd)
                     password[size_password - 2] = '\0';
 
                     // DEBUG
-                    printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, admin_pass), password, admin_pass);
-                    fflush(stdout);
+                    /*printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, admin_pass), password, admin_pass);
+                    fflush(stdout);*/
 
                     if (strcmp(password, admin_pass) == 0)
                     {

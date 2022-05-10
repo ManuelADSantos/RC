@@ -27,12 +27,19 @@ void login(int client_fd, char username[]);
 void menu_client(int client_fd, char username[]);
 // /----------/ Menu Admin /----------/
 void menu_admin(int admin_fd);
+// /----------/ send_visual /----------/
+void send_visual(int fd, char msg[]);
+// /----------/ recv_visual /----------/
+void recv_visual(int fd, char buffer[]);
 
 /*-----------------------------------------------------------------------
                                 MAIN
 -----------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
+    // Create users directory
+    mkdir("./users", 0777);
+
     int fd, client;
     struct sockaddr_in addr, client_addr;
     int client_addr_size;
@@ -111,8 +118,7 @@ void erro(char *msg)
 void login(int client_fd, char username[])
 {
     char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
-    send(client_fd, msg_inicial, strlen(msg_inicial), 0);
-    fflush(stdout);
+    send_visual(client_fd, msg_inicial);
 
     int option = -1;
     while (option == -1)
@@ -130,8 +136,10 @@ void login(int client_fd, char username[])
         char filename_user[BUF_SIZE];
         strcpy(filename_user, username);
         strcat(filename_user, ".txt");
+        char filename_user_path[BUF_SIZE] = "./users/";
+        strcat(filename_user_path, filename_user);
 
-        if ((file_user = fopen(filename_user, "r")) == NULL)
+        if ((file_user = fopen(filename_user_path, "r")) == NULL)
         {
             // /----------/ Caso não exista o username em causa /----------/
             char msg_get_user_error[] = "  Username não existe. Insira um username válido\n";
@@ -231,8 +239,7 @@ void menu_admin(int admin_fd)
     {
         // /----------/ Print Menu /----------/
         char menu_admin[] = "\n==========================================\n               MENU ADMIN\n\n";
-        send(admin_fd, menu_admin, strlen(menu_admin), 0);
-        fflush(stdout);
+        send_visual(admin_fd, menu_admin);
 
         char admin_options[] = "        (1) Consultar Palavras\n\
         (2) Adicionar Palavra\n\
@@ -240,8 +247,7 @@ void menu_admin(int admin_fd)
         (4) Adicionar Utilzador\n\
         (5) Remover Utilzador\n\
         (6) Sair\n\n ";
-        send(admin_fd, admin_options, strlen(admin_options), 0);
-        fflush(stdout);
+        send_visual(admin_fd, admin_options);
 
         // /----------/ Escolher o que fazer /----------/
         char option[BUF_SIZE] = "";
@@ -285,6 +291,11 @@ void menu_admin(int admin_fd)
             char new_word[BUF_SIZE] = "";
             recv(admin_fd, new_word, BUF_SIZE + 1, 0);
             fflush(stdout);
+
+            // =====================
+            printf("Recebi >%s<\n", new_word);
+            fflush(stdout);
+            // =====================
 
             // /----------/ Escrever nova palavra no ficheiro /----------/
             if ((file_words = fopen("words.txt", "a")) != NULL)
@@ -457,7 +468,7 @@ void menu_admin(int admin_fd)
             {
                 FILE *admin_auth;
                 char admin_pass[BUF_SIZE] = "";
-                admin_auth = fopen("admin.txt", "r");
+                admin_auth = fopen("./users/admin.txt", "r");
                 fread(admin_pass, sizeof(admin_pass), 1, admin_auth);
                 fclose(admin_auth);
 
@@ -516,4 +527,16 @@ void menu_admin(int admin_fd)
             break;
         }
     }
+}
+
+void send_visual(int fd, char msg[])
+{
+    send(fd, msg, strlen(msg), 0);
+    fflush(stdout);
+}
+
+void recv_visual(int fd, char buffer[])
+{
+    send(fd, buffer, BUF_SIZE, 0);
+    fflush(stdout);
 }

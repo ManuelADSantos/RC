@@ -160,10 +160,6 @@ void login(int client_fd, char username[])
                 fflush(stdout);
                 password[size_password - 2] = '\0';
 
-                // DEBUG
-                /*printf("Comparação dá %d\npassword->%s\nreal_password->%s\n", strcmp(password, user_password_auth), password, user_password_auth);
-                fflush(stdout);*/
-
                 if (strcmp(password, user_password_auth) == 0)
                 {
                     // /----------/ LOGIN AUTORIZADO /----------/
@@ -178,9 +174,6 @@ void login(int client_fd, char username[])
                 else
                 {
                     // /----------/ PASSWORD ERRADA /----------/
-                    printf("%s\n", password);
-                    fflush(stdout);
-
                     tentativas++;
                     char msg_get_password_error[] = "  Password Incorrreta. ";
                     char ten = (3 - tentativas) + '0';
@@ -270,7 +263,7 @@ void menu_admin(int admin_fd)
 
             // /----------/ Print Palavras /----------/
             file_words = fopen("words.txt", "a+");
-            chmod("words.txt", 0777);
+            // chmod("words.txt", 0777);
             while (fgets(word, sizeof(word), file_words))
             {
                 send(admin_fd, word, strlen(word), 0);
@@ -294,82 +287,92 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             // /----------/ Escrever nova palavra no ficheiro /----------/
-            file_words = fopen("words.txt", "a");
-            chmod("words.txt", 0777);
-            fwrite(new_word, sizeof(char), strlen(new_word), file_words);
-            fflush(stdout);
-
-            // /----------/ Ajustar \n /----------/
-            int count = 0;
-            while (new_word[count] != '\n')
-                count++;
-
-            if ((int)strlen(new_word) - count != 1)
+            if ((file_words = fopen("words.txt", "a")) != NULL)
             {
-                char aux[] = "\n";
-                fwrite(aux, sizeof(char), strlen(aux), file_words);
+                // chmod("words.txt", 0777);
+                fwrite(new_word, sizeof(char), strlen(new_word), file_words);
+
+                // /----------/ Ajustar \n /----------/
+                int count = 0;
+                while (new_word[count] != '\n')
+                    count++;
+
+                if ((int)strlen(new_word) - count != 1)
+                {
+                    char aux[] = "\n";
+                    fwrite(aux, sizeof(char), strlen(aux), file_words);
+                    fflush(stdout);
+                }
+
+                // /----------/ Fechar ficheiro /----------/
+                fclose(file_words);
                 fflush(stdout);
             }
-
-            // /----------/ Fechar ficheiro /----------/
-            fclose(file_words);
-            fflush(stdout);
+            else
+            {
+                printf("ERRO: Abrir ficheiro em adicionar palavra\n");
+                fflush(stdout);
+            }
         }
         // /====================/ (3) Remover palavra do ficheiro /====================/
         else if (option[0] == '3')
         {
-            file_words = fopen("words.txt", "r");
-            chmod("words.txt", 0777);
-            FILE *file_words_aux;
-            file_words_aux = fopen("words_aux.txt", "wt+");
-            chmod("words_aux.txt", 0777);
-
-            // /----------/ Printf remover /----------/
-            char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
-            send(admin_fd, menu_remover, strlen(menu_remover), 0);
-            fflush(stdout);
-
-            // /----------/ Pedir palavra a remover (word\n) /----------/
-            char word_to_delete[BUF_SIZE] = "";
-            recv(admin_fd, word_to_delete, BUF_SIZE, 0);
-            fflush(stdout);
-
-            // /----------/ Ajustar \n /----------/
-            int count = 0;
-            while (word_to_delete[count] != '\n')
-                count++;
-
-            if ((int)strlen(word_to_delete) - count != 1)
+            if ((file_words = fopen("words.txt", "r")) != NULL)
             {
-                strcat(word_to_delete, "\n");
-            }
-
-            // /----------/ Escrever no ficheiro auxiliar /----------/
-            while (fgets(word, sizeof(word), file_words))
-            {
-                fflush(stdout);
-                if (strcmp(word_to_delete, word) != 0)
+                // chmod("words.txt", 0777);
+                FILE *file_words_aux;
+                if ((file_words_aux = fopen("words_aux.txt", "wt+")) != NULL)
                 {
-                    fwrite(word, sizeof(char), strlen(word), file_words_aux);
+                    // chmod("words_aux.txt", 0777);
+
+                    // /----------/ Printf remover /----------/
+                    char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
+                    send(admin_fd, menu_remover, strlen(menu_remover), 0);
                     fflush(stdout);
+
+                    // /----------/ Pedir palavra a remover (word\n) /----------/
+                    char word_to_delete[BUF_SIZE] = "";
+                    recv(admin_fd, word_to_delete, BUF_SIZE, 0);
+                    fflush(stdout);
+
+                    // /----------/ Ajustar \n /----------/
+                    int count = 0;
+                    while (word_to_delete[count] != '\n')
+                        count++;
+
+                    if ((int)strlen(word_to_delete) - count != 1)
+                    {
+                        strcat(word_to_delete, "\n");
+                    }
+
+                    // /----------/ Escrever no ficheiro auxiliar /----------/
+                    while (fgets(word, sizeof(word), file_words))
+                    {
+                        fflush(stdout);
+                        if (strcmp(word_to_delete, word) != 0)
+                        {
+                            fwrite(word, sizeof(char), strlen(word), file_words_aux);
+                            fflush(stdout);
+                        }
+                    }
+                    fclose(file_words);
+
+                    file_words = fopen("words.txt", "wt");
+                    // chmod("words.txt", 0777);
+                    fseek(file_words_aux, 0, SEEK_SET);
+                    while (fgets(word, sizeof(word), file_words_aux))
+                    {
+                        fflush(stdout);
+                        fwrite(word, sizeof(char), strlen(word), file_words);
+                        fflush(stdout);
+                    }
+
+                    fclose(file_words_aux);
+                    // remove("words_aux.txt");
                 }
-            }
-            fclose(file_words);
-
-            file_words = fopen("words.txt", "wt");
-            chmod("words.txt", 0777);
-            fseek(file_words_aux, 0, SEEK_SET);
-            while (fgets(word, sizeof(word), file_words_aux))
-            {
-                fflush(stdout);
-                fwrite(word, sizeof(char), strlen(word), file_words);
+                fclose(file_words);
                 fflush(stdout);
             }
-
-            fclose(file_words_aux);
-            // remove("words_aux.txt");
-            fclose(file_words);
-            fflush(stdout);
         }
         // /====================/ (4) Adicinar utilizador /====================/
         else if (option[0] == '4')
@@ -391,9 +394,11 @@ void menu_admin(int admin_fd)
 
             FILE *file_new_user;
             strcat(new_username, ".txt");
+            char new_username_path[BUF_SIZE] = "./users/";
+            strcat(new_username_path, new_username);
 
             // Username ainda não registado
-            if (fopen(new_username, "r") == NULL)
+            if (fopen(new_username_path, "r") == NULL)
             {
                 // /----------/ Enviar print de pedido da password do novo username /----------/
                 char msg_get_new_user_password[] = "\n New username password: ";
@@ -406,7 +411,7 @@ void menu_admin(int admin_fd)
                 new_username_password[size_user_password - 2] = '\0';
 
                 // /----------/ Receber password do novo username inserido /----------/
-                file_new_user = fopen(new_username, "wt");
+                file_new_user = fopen(new_username_path, "wt");
                 fwrite(new_username_password, sizeof(char), strlen(new_username_password), file_new_user);
                 fflush(stdout);
                 fclose(file_new_user);
@@ -438,6 +443,9 @@ void menu_admin(int admin_fd)
             remove_username[size_user_remove - 2] = '\0';
 
             strcat(remove_username, ".txt");
+            char remove_username_path[BUF_SIZE] = "./users/";
+            strcat(remove_username_path, remove_username);
+            strcpy(remove_username, remove_username_path);
 
             if (fopen(remove_username, "r") == NULL)
             {
@@ -499,7 +507,7 @@ void menu_admin(int admin_fd)
                 }
             }
         }
-        // /====================/ (6) Sair ficheiro /====================/
+        // /====================/ (6) Sair /====================/
         else if (option[0] == '6')
         {
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";

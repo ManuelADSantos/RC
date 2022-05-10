@@ -1,4 +1,5 @@
 */.vscode
+*/.users
 .vscode
 .gitignore
 *.bin

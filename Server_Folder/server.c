@@ -292,11 +292,6 @@ void menu_admin(int admin_fd)
             recv(admin_fd, new_word, BUF_SIZE + 1, 0);
             fflush(stdout);
 
-            // =====================
-            printf("Recebi >%s<\n", new_word);
-            fflush(stdout);
-            // =====================
-
             // /----------/ Escrever nova palavra no ficheiro /----------/
             if ((file_words = fopen("words.txt", "a")) != NULL)
             {
@@ -305,7 +300,7 @@ void menu_admin(int admin_fd)
 
                 // /----------/ Ajustar \n /----------/
                 int count = 0;
-                while (new_word[count] != '\n')
+                while (new_word[count] != '\n' && count < BUF_SIZE)
                     count++;
 
                 if ((int)strlen(new_word) - count != 1)
@@ -348,7 +343,7 @@ void menu_admin(int admin_fd)
 
                     // /----------/ Ajustar \n /----------/
                     int count = 0;
-                    while (word_to_delete[count] != '\n')
+                    while (word_to_delete[count] != '\n' && count < BUF_SIZE)
                         count++;
 
                     if ((int)strlen(word_to_delete) - count != 1)

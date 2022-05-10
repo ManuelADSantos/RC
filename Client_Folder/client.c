@@ -48,13 +48,12 @@ int main(int argc, char *argv[])
             if (recv(fd, NULL, 0, MSG_PEEK) >= 0)
             {
                 fflush(stdout);
-                ssize_t recebeu = recv(fd, buffer_read, sizeof(buffer_read), 0);
-                printf("Foram recebidos %ld bytes de informação\n", recebeu);
+                // ssize_t recebeu =
+                recv(fd, buffer_read, sizeof(buffer_read), 0);
+                // printf("Foram recebidos %ld bytes de informação\n", recebeu);
                 fflush(stdout);
                 printf("%s", buffer_read);
                 fflush(stdout);
-
-                sleep(1);
             }
         }
     }
@@ -68,8 +67,9 @@ int main(int argc, char *argv[])
             {
                 fflush(stdout);
                 scanf("%s", buffer_write);
-                ssize_t enviou = send(fd, buffer_write, strlen(buffer_write) + 2, 0);
-                printf("Foram enviados %ld bytes de informação\n", enviou);
+                // ssize_t enviou =
+                send(fd, buffer_write, strlen(buffer_write) + 2, 0);
+                // printf("Foram enviados %ld bytes de informação\n", enviou);
                 fflush(stdout);
                 fflush(stdin);
 

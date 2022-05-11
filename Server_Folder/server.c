@@ -171,11 +171,29 @@ void login(int client_fd, char username[])
                 if (strcmp(password, user_password_auth) == 0)
                 {
                     // /----------/ LOGIN AUTORIZADO /----------/
+                    // Construir mensagem de sucesso
                     char msg_login_sucess[] = "\n             Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
-                    send(client_fd, msg_login_sucess, strlen(msg_login_sucess), 0);
+
+                    send_visual(client_fd, msg_login_sucess);
+
+                    // =======================
+                    char online_status[BUF_SIZE] = "";
+                    strcat(online_status, username);
+                    strcat(online_status, ",");
+                    char num_pid[10] = "";
+                    sprintf(num_pid, "%d\n", getpid());
                     fflush(stdout);
+                    strcat(online_status, num_pid);
+                    fflush(stdout);
+
+                    FILE *status;
+                    status = fopen("status.txt", "a");
+                    fwrite(online_status, sizeof(char), strlen(online_status), status);
+                    fclose(status);
+                    // =======================
+
                     option = 0;
                     break;
                 }

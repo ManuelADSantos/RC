@@ -29,8 +29,6 @@ void menu_client(int client_fd, char username[]);
 void menu_admin(int admin_fd);
 // /----------/ send_visual /----------/
 void send_visual(int fd, char msg[]);
-// /----------/ recv_visual /----------/
-void recv_visual(int fd, char buffer[]);
 
 /*-----------------------------------------------------------------------
                                 MAIN
@@ -125,8 +123,7 @@ void login(int client_fd, char username[])
     {
         // /----------/ Enviar print de pedido do username /----------/
         char msg_get_user[] = "\n Username: ";
-        send(client_fd, msg_get_user, strlen(msg_get_user), 0);
-        fflush(stdout);
+        send_visual(client_fd, msg_get_user);
 
         // /----------/ Receber username inserido /----------/
         ssize_t size_user = recv(client_fd, username, BUF_SIZE, 0);
@@ -227,7 +224,7 @@ void menu_client(int client_fd, char username[])
 {
     while (1)
     {
-
+        /*
         // /----------/ Print Menu /----------/
         char menu_client[] = "\n==========================================\n                  MENU\n\n";
         send_visual(client_fd, menu_client);
@@ -236,13 +233,59 @@ void menu_client(int client_fd, char username[])
         (3) Sair\n\n ";
 
         send_visual(client_fd, client_options);
+        */
 
         // /----------/ Escolher o que fazer /----------/
-        char option[BUF_SIZE] = "";
-        ssize_t size_choice = recv(client_fd, option, BUF_SIZE, 0);
+        char cmd[BUF_SIZE] = "", option[BUF_SIZE] = "";
+        // ssize_t size_choice =
+        recv(client_fd, cmd, BUF_SIZE, 0);
         fflush(stdout);
-        option[size_choice - 2] = '\0';
 
+        printf("CMD>%s<\n", cmd);
+        fflush(stdout);
+
+        strncpy(option, cmd, 4);
+
+        printf("OPTION>%s<\n", option);
+        fflush(stdout);
+
+        if (strcmp(option, "send") == 0)
+        {
+            char user[BUF_SIZE] = "", msg[BUF_SIZE] = "";
+            int point = 4, aux = 0;
+
+            while (cmd[point] != ' ')
+            {
+                printf("char>%d<\n", cmd[point]);
+                fflush(stdout);
+
+                user[aux] = cmd[point];
+
+                point++;
+                printf("point>%d<\n", point);
+                fflush(stdout);
+
+                aux++;
+                printf("point>%d<\n", point);
+                fflush(stdout);
+            }
+            aux = 0;
+            while (cmd[point] != 0)
+            {
+                msg[aux] = cmd[point];
+                point++;
+                aux++;
+            }
+
+            printf("USER>%s<\n", user);
+            fflush(stdout);
+            printf("MESSAGE>%s<\n", msg);
+            fflush(stdout);
+        }
+
+        // cmd[size_choice - 2] = '\0';
+
+        /*
         // /====================/ (1) Utilizadores Online /====================/
         if (option[0] == '1')
         {
@@ -332,7 +375,7 @@ void menu_client(int client_fd, char username[])
             // remove("status_aux.txt");
 
             break;
-        }
+        }*/
     }
 }
 
@@ -677,11 +720,5 @@ void menu_admin(int admin_fd)
 void send_visual(int fd, char msg[])
 {
     send(fd, msg, strlen(msg), 0);
-    fflush(stdout);
-}
-
-void recv_visual(int fd, char buffer[])
-{
-    send(fd, buffer, BUF_SIZE, 0);
     fflush(stdout);
 }

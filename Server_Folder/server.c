@@ -244,8 +244,46 @@ void menu_client(int client_fd, char username[])
     option[size_choice - 2] = '\0';
 
     char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
-    send(client_fd, menu_client_logout, strlen(menu_client_logout), 0);
-    fflush(stdout);
+    send_visual(client_fd, menu_client_logout);
+
+    // Registar estado online
+    FILE *status_aux, *status;
+    status_aux = fopen("status_aux.txt", "wt+");
+    status = fopen("status.txt", "r");
+
+    // /----------/ Escrever no ficheiro auxiliar /----------/
+    char read_status[BUF_SIZE] = "";
+    char to_off_status[BUF_SIZE] = "";
+    char aux[10] = "";
+    strcat(to_off_status, username);
+    strcat(to_off_status, ",");
+    sprintf(aux, "%d\n", getpid());
+    strcat(to_off_status, aux);
+
+    while (fgets(read_status, sizeof(read_status), status))
+    {
+        // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
+        fflush(stdout);
+
+        if (strcmp(to_off_status, read_status) != 0)
+        {
+            fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+            fflush(stdout);
+        }
+    }
+    fclose(status);
+
+    status = fopen("status.txt", "wt");
+    fseek(status_aux, 0, SEEK_SET);
+    while (fgets(read_status, sizeof(read_status), status_aux))
+    {
+        fflush(stdout);
+        fwrite(read_status, sizeof(char), strlen(read_status), status);
+        fflush(stdout);
+    }
+    fclose(status);
+    fclose(status_aux);
+    // remove("status_aux.txt");
 }
 
 /*-----------------------------------------------------------------------
@@ -542,8 +580,45 @@ void menu_admin(int admin_fd)
         else if (option[0] == '6')
         {
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
-            send(admin_fd, menu_admin_logout, strlen(menu_admin_logout), 0);
-            fflush(stdout);
+            send_visual(admin_fd, menu_admin_logout);
+
+            FILE *status_aux, *status;
+            status_aux = fopen("status_aux.txt", "wt+");
+            status = fopen("status.txt", "r");
+
+            // /----------/ Escrever no ficheiro auxiliar /----------/
+            char read_status[BUF_SIZE] = "";
+            char to_off_status[BUF_SIZE] = "";
+            char aux[10] = "";
+            strcat(to_off_status, "admin,");
+            sprintf(aux, "%d\n", getpid());
+            strcat(to_off_status, aux);
+
+            while (fgets(read_status, sizeof(read_status), status))
+            {
+                // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
+                fflush(stdout);
+
+                if (strcmp(to_off_status, read_status) != 0)
+                {
+                    fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+                    fflush(stdout);
+                }
+            }
+            fclose(status);
+
+            status = fopen("status.txt", "wt");
+            fseek(status_aux, 0, SEEK_SET);
+            while (fgets(read_status, sizeof(read_status), status_aux))
+            {
+                fflush(stdout);
+                fwrite(read_status, sizeof(char), strlen(read_status), status);
+                fflush(stdout);
+            }
+            fclose(status);
+            fclose(status_aux);
+            // remove("status_aux.txt");
+
             break;
         }
     }

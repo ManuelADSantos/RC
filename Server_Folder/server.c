@@ -333,8 +333,7 @@ void menu_admin(int admin_fd)
 
                     // /----------/ Printf remover /----------/
                     char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
-                    send(admin_fd, menu_remover, strlen(menu_remover), 0);
-                    fflush(stdout);
+                    send_visual(admin_fd, menu_remover);
 
                     // /----------/ Pedir palavra a remover (word\n) /----------/
                     char word_to_delete[BUF_SIZE] = "";
@@ -346,16 +345,24 @@ void menu_admin(int admin_fd)
                     while (word_to_delete[count] != '\n' && count < BUF_SIZE)
                         count++;
 
+                    int tamanho = 0;
                     if ((int)strlen(word_to_delete) - count != 1)
+                    // Não é telnet
                     {
+                        tamanho = strlen(word_to_delete);
                         strcat(word_to_delete, "\n");
+                    }
+                    else
+                    {
+                        tamanho = strlen(word_to_delete) - 2;
                     }
 
                     // /----------/ Escrever no ficheiro auxiliar /----------/
                     while (fgets(word, sizeof(word), file_words))
                     {
+                        // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", word, word_to_delete, strncmp(word_to_delete, word, tamanho));
                         fflush(stdout);
-                        if (strcmp(word_to_delete, word) != 0)
+                        if (strncmp(word_to_delete, word, tamanho) != 0)
                         {
                             fwrite(word, sizeof(char), strlen(word), file_words_aux);
                             fflush(stdout);

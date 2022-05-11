@@ -66,7 +66,8 @@ int main(int argc, char *argv[])
             if (send(fd, NULL, 0, 0) >= 0)
             {
                 fflush(stdout);
-                scanf("%s", buffer_write);
+                fgets(buffer_write, sizeof(buffer_write), stdin);
+                buffer_write[strcspn(buffer_write, "\n")] = 0;
                 // ssize_t enviou =
                 send(fd, buffer_write, strlen(buffer_write) + 2, 0);
                 // printf("Foram enviados %ld bytes de informação\n", enviou);

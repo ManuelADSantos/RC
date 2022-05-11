@@ -225,65 +225,115 @@ void login(int client_fd, char username[])
 -----------------------------------------------------------------------*/
 void menu_client(int client_fd, char username[])
 {
-    // /----------/ Print Menu /----------/
-    char menu_client[] = "\n==========================================\n                  MENU\n\n";
-    send(client_fd, menu_client, strlen(menu_client), 0);
-    fflush(stdout);
+    while (1)
+    {
 
-    char client_options[] = "        (1) Utilizadores Online\n\
+        // /----------/ Print Menu /----------/
+        char menu_client[] = "\n==========================================\n                  MENU\n\n";
+        send_visual(client_fd, menu_client);
+        char client_options[] = "        (1) Utilizadores Online\n\
         (2) Enviar Mensagem\n\
         (3) Sair\n\n ";
 
-    send(client_fd, client_options, strlen(client_options), 0);
-    fflush(stdout);
+        send_visual(client_fd, client_options);
 
-    // /----------/ Escolher o que fazer /----------/
-    char option[BUF_SIZE] = "";
-    ssize_t size_choice = recv(client_fd, option, BUF_SIZE, 0);
-    fflush(stdout);
-    option[size_choice - 2] = '\0';
-
-    char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
-    send_visual(client_fd, menu_client_logout);
-
-    // Registar estado online
-    FILE *status_aux, *status;
-    status_aux = fopen("status_aux.txt", "wt+");
-    status = fopen("status.txt", "r");
-
-    // /----------/ Escrever no ficheiro auxiliar /----------/
-    char read_status[BUF_SIZE] = "";
-    char to_off_status[BUF_SIZE] = "";
-    char aux[10] = "";
-    strcat(to_off_status, username);
-    strcat(to_off_status, ",");
-    sprintf(aux, "%d\n", getpid());
-    strcat(to_off_status, aux);
-
-    while (fgets(read_status, sizeof(read_status), status))
-    {
-        // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
+        // /----------/ Escolher o que fazer /----------/
+        char option[BUF_SIZE] = "";
+        ssize_t size_choice = recv(client_fd, option, BUF_SIZE, 0);
         fflush(stdout);
+        option[size_choice - 2] = '\0';
 
-        if (strcmp(to_off_status, read_status) != 0)
+        // /====================/ (1) Utilizadores Online /====================/
+        if (option[0] == '1')
         {
-            fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+            FILE *online_status;
+            char user[BUF_SIZE] = "";
+            char user_aux[BUF_SIZE] = "";
+
+            // /----------/ Printf escolha /----------/
+            char menu_online[] = "\n==========================================\n      Utilizadores Online\n\n";
+            send_visual(client_fd, menu_online);
+
+            // /----------/ Print Palavras /----------/
+            online_status = fopen("status.txt", "a+");
+            while (fgets(user_aux, sizeof(user_aux), online_status))
+            {
+                strcpy(user, "");
+                int ind = 0;
+                while (user_aux[ind] != ',')
+                {
+                    user[ind] = user_aux[ind];
+                    ind++;
+                }
+                user[ind] = '\0';
+                printf("USER<%s>\n", user);
+                fflush(stdout);
+
+                if (strcmp(user, username) != 0 && strcmp(user, "admin") != 0)
+                {
+                    send(client_fd, user, strlen(user), 0);
+                    send(client_fd, "\n", strlen("\n"), 0);
+                    fflush(stdout);
+                }
+            }
+
+            // /----------/ Fechar ficheiro /----------/
+            fclose(online_status);
+        }
+        // /====================/ (2) Enviar Mensagem /====================/
+        else if (option[0] == '2')
+        {
+            printf("Enviar mensagem\n");
             fflush(stdout);
         }
-    }
-    fclose(status);
+        // /====================/ (3) Sair /====================/
+        else if (option[0] == '3')
+        {
+            char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
+            send_visual(client_fd, menu_client_logout);
 
-    status = fopen("status.txt", "wt");
-    fseek(status_aux, 0, SEEK_SET);
-    while (fgets(read_status, sizeof(read_status), status_aux))
-    {
-        fflush(stdout);
-        fwrite(read_status, sizeof(char), strlen(read_status), status);
-        fflush(stdout);
+            // Registar estado online
+            FILE *status_aux, *status;
+            status_aux = fopen("status_aux.txt", "wt+");
+            status = fopen("status.txt", "r");
+
+            // /----------/ Escrever no ficheiro auxiliar /----------/
+            char read_status[BUF_SIZE] = "";
+            char to_off_status[BUF_SIZE] = "";
+            char aux[10] = "";
+            strcat(to_off_status, username);
+            strcat(to_off_status, ",");
+            sprintf(aux, "%d\n", getpid());
+            strcat(to_off_status, aux);
+
+            while (fgets(read_status, sizeof(read_status), status))
+            {
+                // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
+                fflush(stdout);
+
+                if (strcmp(to_off_status, read_status) != 0)
+                {
+                    fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+                    fflush(stdout);
+                }
+            }
+            fclose(status);
+
+            status = fopen("status.txt", "wt");
+            fseek(status_aux, 0, SEEK_SET);
+            while (fgets(read_status, sizeof(read_status), status_aux))
+            {
+                fflush(stdout);
+                fwrite(read_status, sizeof(char), strlen(read_status), status);
+                fflush(stdout);
+            }
+            fclose(status);
+            fclose(status_aux);
+            // remove("status_aux.txt");
+
+            break;
+        }
     }
-    fclose(status);
-    fclose(status_aux);
-    // remove("status_aux.txt");
 }
 
 /*-----------------------------------------------------------------------

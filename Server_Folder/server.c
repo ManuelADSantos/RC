@@ -382,6 +382,7 @@ void menu_client(int client_fd, char username[])
                         // connect() com sucesso
 
                         send(send_fd, msg, strlen(msg), 0);
+                        fflush(stdout);
 
                         shutdown(send_fd, SHUT_RDWR);
                         close(send_fd);
@@ -517,22 +518,22 @@ $ exit - Sair / Logout \n\n ";
                 }
 
                 user_port[count] = '\0';
-                /*printf("USER_PORT<%s>\n", user_port);
-                fflush(stdout);*/
+                printf("USER_PORT<%s>\n", user_port);
+                fflush(stdout);
 
                 port_lido = atoi(user_port);
 
-                /*printf("USER_PORT_INT<%d>\n", port_lido);
-                fflush(stdout);*/
+                printf("USER_PORT_INT<%d>\n", port_lido);
+                fflush(stdout);
             }
             // /----------/ Fechar ficheiro /----------/
             fclose(available_ports);
 
             // /----------/ Socket para receber mensagem /----------/
-            int receive_fd, connection_fd, client_addr_size, flag_jump = 0;
+            int receive_fd, connection_fd, client_addr_size;
             struct sockaddr_in receiver_adrr, sender_addr;
 
-            if (flag_jump || (receive_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
+            if ((receive_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
             {
                 // socket() com sucesso
 
@@ -540,10 +541,10 @@ $ exit - Sair / Logout \n\n ";
                 receiver_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
                 receiver_adrr.sin_port = htons(port_lido);
 
-                if (flag_jump || (bind(receive_fd, (SA *)&receiver_adrr, sizeof(receiver_adrr))) == 0)
+                if ((bind(receive_fd, (SA *)&receiver_adrr, sizeof(receiver_adrr))) == 0)
                 {
                     // bind() com sucesso
-                    if (flag_jump || (listen(receive_fd, 5)) == 0)
+                    if ((listen(receive_fd, 5)) == 0)
                     {
                         // listen() com sucesso
                         connection_fd = accept(receive_fd, (SA *)&sender_addr, (socklen_t *)&client_addr_size);
@@ -554,6 +555,7 @@ $ exit - Sair / Logout \n\n ";
                             char msg_received[BUF_SIZE] = "";
                             // ssize_t size_msg_received =
                             recv(connection_fd, msg_received, BUF_SIZE, 0);
+                            fflush(stdout);
 
                             send_visual(client_fd, msg_received);
 
@@ -561,8 +563,6 @@ $ exit - Sair / Logout \n\n ";
                             shutdown(receive_fd, SHUT_RDWR);
                             close(receive_fd);
                             close(connection_fd);
-
-                            flag_jump = 1;
                         }
                     }
                 }

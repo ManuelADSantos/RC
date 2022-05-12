@@ -10,6 +10,7 @@
 #include <sys/wait.h>
 #include <sys/stat.h>
 #include <arpa/inet.h>
+#include <time.h>
 
 /*-----------------------------------------------------------------------
                                 MACROS
@@ -289,6 +290,23 @@ void menu_client(int client_fd, char username[])
                     point++;
                     aux++;
                 }
+
+                // /----------/ Tratar Mensagem a Enviar /----------/
+                char msg_aux[BUF_SIZE] = "";
+                struct tm *ptr;
+                time_t t;
+                t = time(NULL);
+                ptr = localtime(&t);
+
+                strcat(msg_aux, "\n  (");
+                strcat(msg_aux, asctime(ptr));
+                strcat(msg_aux, ") De ");
+                strcat(msg_aux, username);
+                strcat(msg_aux, "\n  ");
+                strcat(msg_aux, msg);
+                strcat(msg_aux, "\n\n");
+
+                strcpy(msg, msg_aux);
 
                 /*printf("USER>%s<\n", user);
                 fflush(stdout);

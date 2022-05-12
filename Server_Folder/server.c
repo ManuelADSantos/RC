@@ -298,11 +298,11 @@ void menu_client(int client_fd, char username[])
                 t = time(NULL);
                 ptr = localtime(&t);
 
-                strcat(msg_aux, "\n  (");
+                strcat(msg_aux, "\n   ");
                 strcat(msg_aux, asctime(ptr));
-                strcat(msg_aux, ") De ");
+                strcat(msg_aux, "   ");
                 strcat(msg_aux, username);
-                strcat(msg_aux, "\n  ");
+                strcat(msg_aux, ": ");
                 strcat(msg_aux, msg);
                 strcat(msg_aux, "\n\n");
 
@@ -383,6 +383,7 @@ void menu_client(int client_fd, char username[])
 
                         send(send_fd, msg, strlen(msg), 0);
 
+                        shutdown(send_fd, SHUT_RDWR);
                         close(send_fd);
                     }
                 }
@@ -528,10 +529,10 @@ $ exit - Sair / Logout \n\n ";
             fclose(available_ports);
 
             // /----------/ Socket para receber mensagem /----------/
-            int receive_fd, connection_fd, client_addr_size;
+            int receive_fd, connection_fd, client_addr_size, flag_jump = 0;
             struct sockaddr_in receiver_adrr, sender_addr;
 
-            if ((receive_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
+            if (flag_jump || (receive_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
             {
                 // socket() com sucesso
 
@@ -539,10 +540,10 @@ $ exit - Sair / Logout \n\n ";
                 receiver_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
                 receiver_adrr.sin_port = htons(port_lido);
 
-                if ((bind(receive_fd, (SA *)&receiver_adrr, sizeof(receiver_adrr))) == 0)
+                if (flag_jump || (bind(receive_fd, (SA *)&receiver_adrr, sizeof(receiver_adrr))) == 0)
                 {
                     // bind() com sucesso
-                    if ((listen(receive_fd, 5)) == 0)
+                    if (flag_jump || (listen(receive_fd, 5)) == 0)
                     {
                         // listen() com sucesso
                         connection_fd = accept(receive_fd, (SA *)&sender_addr, (socklen_t *)&client_addr_size);
@@ -556,7 +557,12 @@ $ exit - Sair / Logout \n\n ";
 
                             send_visual(client_fd, msg_received);
 
+                            shutdown(connection_fd, SHUT_RDWR);
+                            shutdown(receive_fd, SHUT_RDWR);
+                            close(receive_fd);
                             close(connection_fd);
+
+                            flag_jump = 1;
                         }
                     }
                 }

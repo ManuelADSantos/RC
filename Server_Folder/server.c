@@ -424,13 +424,13 @@ $ exit - Sair / Logout \n\n ";
                 }
 
                 user_port[count] = '\0';
-                printf("USER_PORT<%s>\n", user_port);
-                fflush(stdout);
+                /*printf("USER_PORT<%s>\n", user_port);
+                fflush(stdout);*/
 
                 port_lido = atoi(user_port);
 
-                printf("USER_PORT_INT<%d>\n", port_lido);
-                fflush(stdout);
+                /*printf("USER_PORT_INT<%d>\n", port_lido);
+                fflush(stdout);*/
             }
             // /----------/ Fechar ficheiro /----------/
             fclose(available_ports);

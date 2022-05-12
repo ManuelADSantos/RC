@@ -9,6 +9,7 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <sys/stat.h>
+#include <arpa/inet.h>
 
 /*-----------------------------------------------------------------------
                                 MACROS
@@ -294,7 +295,79 @@ void menu_client(int client_fd, char username[])
                 printf("MESSAGE>%s<\n", msg);
                 fflush(stdout);*/
 
-                // /----------/ Criar Socket para Enviar Mensagem /----------/
+                // /----------/ Procurar Porto do Destinatário /----------/
+                int port_destino = 0;
+                FILE *destiny_port;
+                char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "", reader_aux[BUF_SIZE] = "";
+
+                // /----------/ Fechar ficheiro /----------/
+                destiny_port = fopen("status.txt", "r");
+
+                // /----------/ Procurar porto para enviar informação /----------/
+                while (fgets(reader, sizeof(reader), destiny_port))
+                {
+                    int ind = 0, count = 0;
+                    while (reader[ind] != ',')
+                    {
+                        reader_aux[ind] = reader[ind];
+                        ind++;
+                    }
+
+                    /*printf("DESTINY_USER_NAME_READ<%s>\n", reader_aux);
+                    fflush(stdout);*/
+
+                    if (strcmp(user_destino, reader_aux) == 0)
+                    {
+                        /*printf("BATEU_CERTO<%s>\n", reader_aux);
+                        fflush(stdout);*/
+
+                        ind++;
+                        while (reader[ind] != '\n')
+                        {
+                            user_port[count] = reader[ind];
+                            ind++;
+                            count++;
+                        }
+                        // === Verificação ===
+                        /*user_port[count] = '\0';
+                        printf("USER_PORT<%s>\n", user_port);
+                        fflush(stdout);*/
+
+                        port_destino = atoi(user_port);
+
+                        /*printf("USER_PORT_INT<%d>\n", port_destino);
+                        fflush(stdout);*/
+                    }
+
+                    strcpy(reader, "");
+                }
+                // /----------/ Fechar ficheiro /----------/
+                fclose(destiny_port);
+
+                // /----------/ Socket para enviar mensagem /----------/
+                int send_fd;
+                //, connection_fd;
+                struct sockaddr_in sender_adrr, receiver_addr;
+
+                if ((send_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
+                {
+                    bzero(&receiver_addr, sizeof(receiver_addr));
+
+                    // socket() com sucesso
+
+                    sender_adrr.sin_family = AF_INET;
+                    sender_adrr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                    sender_adrr.sin_port = htons(port_destino);
+
+                    if (connect(send_fd, (SA *)&sender_adrr, sizeof(sender_adrr)) == 0)
+                    {
+                        // connect() com sucesso
+
+                        send(send_fd, msg, strlen(msg), 0);
+
+                        close(send_fd);
+                    }
+                }
             }
             else if (strcmp(option, "list") == 0)
             {
@@ -395,6 +468,7 @@ $ exit - Sair / Logout \n\n ";
             }
         }
     }
+
     else
     {
         while (1)

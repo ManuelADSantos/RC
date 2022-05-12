@@ -17,7 +17,6 @@
 -----------------------------------------------------------------------*/
 #define SERVER_PORT 9876
 #define BUF_SIZE 1024
-#define SA struct sockaddr
 
 /*-----------------------------------------------------------------------
                           VARIÁVEIS GLOBAIS
@@ -191,7 +190,6 @@ void login(int client_fd, char username[])
                     char porto[10] = "";
                     sprintf(porto, "%d\n", client_port);
                     fflush(stdout);
-                    // client_port ++;
                     strcat(online_status, porto);
                     fflush(stdout);
 
@@ -234,7 +232,7 @@ void menu_client(int client_fd, char username[])
 {
     pid_t pid;
 
-    // /----------/ Processo de Scanf /----------/
+    // /====================/ (SEND END) Enviar Mensagens /====================/
     if ((pid = fork()) > 0)
     {
         while (1)
@@ -243,7 +241,7 @@ void menu_client(int client_fd, char username[])
             // /----------/ Print Menu /----------/
             char menu_client[] = "\n==========================================\n                  MENU\n\n";
             send_visual(client_fd, menu_client);
-            char client_options[] = "        $ help - em caso de dúvida \n\n ";
+            char client_options[] = "  Commands: send , list, help & exit\n\n ";
             send_visual(client_fd, client_options);
 
             // /----------/ Escolher o que fazer /----------/
@@ -252,143 +250,207 @@ void menu_client(int client_fd, char username[])
             recv(client_fd, cmd, BUF_SIZE, 0);
             fflush(stdout);
 
-            /*printf("CMD>%s<\n", cmd);
-            fflush(stdout);*/
-
             strncpy(option, cmd, 4);
 
-            /*printf("OPTION>%s<\n", option);
-            fflush(stdout);*/
-
+            // /====================/ (send) Enviar Mensagem a outro Utilizador /====================/
             if (strcmp(option, "send") == 0)
             {
-                // /----------/ Variáveis /----------/
-                char user_destino[BUF_SIZE] = "", msg[BUF_SIZE] = "";
-                int point = 5, aux = 0;
-
-                // /----------/ Obter Username de Destino /----------/
-                do
+                if (fork() == 0)
                 {
-                    /*printf("char>%c<\n", cmd[point]);
-                    fflush(stdout);*/
-                    user_destino[aux] = cmd[point];
-                    point++;
-                    /*printf("point>%d<\n", point);
-                    fflush(stdout);*/
-                    aux++;
-                    /*printf("point>%d<\n", point);
-                    fflush(stdout);*/
-                } while (cmd[point] != ' ');
+                    // /----------/ Variáveis /----------/
+                    char user_destino[BUF_SIZE] = "", msg[BUF_SIZE] = "";
+                    int point = 5, aux = 0;
 
-                aux = 0;
-                point++;
-
-                // /----------/ Obter Mensagem a Enviar /----------/
-                while (cmd[point] != 0)
-                {
-                    msg[aux] = cmd[point];
-                    point++;
-                    aux++;
-                }
-
-                // /----------/ Tratar Mensagem a Enviar /----------/
-                char msg_aux[BUF_SIZE] = "";
-                struct tm *ptr;
-                time_t t;
-                t = time(NULL);
-                ptr = localtime(&t);
-
-                strcat(msg_aux, "\n   ");
-                strcat(msg_aux, asctime(ptr));
-                strcat(msg_aux, "   ");
-                strcat(msg_aux, username);
-                strcat(msg_aux, ": ");
-                strcat(msg_aux, msg);
-                strcat(msg_aux, "\n\n");
-
-                strcpy(msg, msg_aux);
-
-                /*printf("USER>%s<\n", user);
-                fflush(stdout);
-                printf("MESSAGE>%s<\n", msg);
-                fflush(stdout);*/
-
-                // /----------/ Procurar Porto do Destinatário /----------/
-                int port_destino = 0;
-                FILE *destiny_port;
-                char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "", reader_aux[BUF_SIZE] = "";
-
-                // /----------/ Fechar ficheiro /----------/
-                destiny_port = fopen("status.txt", "r");
-
-                // /----------/ Procurar porto para enviar informação /----------/
-                while (fgets(reader, sizeof(reader), destiny_port))
-                {
-                    int ind = 0, count = 0;
-                    while (reader[ind] != ',')
+                    // /----------/ Obter Username de Destino /----------/
+                    do
                     {
-                        reader_aux[ind] = reader[ind];
-                        ind++;
+                        user_destino[aux] = cmd[point];
+                        point++;
+                        aux++;
+                    } while (cmd[point] != ' ');
+
+                    aux = 0;
+                    point++;
+
+                    // /----------/ Obter Mensagem a Enviar /----------/
+                    while (cmd[point] != 0)
+                    {
+                        msg[aux] = cmd[point];
+                        point++;
+                        aux++;
                     }
 
-                    /*printf("DESTINY_USER_NAME_READ<%s>\n", reader_aux);
+                    // /----------/ Tratar Mensagem a Enviar /----------/
+                    char msg_aux[BUF_SIZE] = "";
+                    struct tm *ptr;
+                    time_t t;
+                    t = time(NULL);
+                    ptr = localtime(&t);
+
+                    strcat(msg_aux, "\n   ");
+                    strcat(msg_aux, asctime(ptr));
+                    strcat(msg_aux, "   ");
+                    strcat(msg_aux, username);
+                    strcat(msg_aux, ": ");
+                    strcat(msg_aux, msg);
+                    strcat(msg_aux, "\n\n");
+
+                    strcpy(msg, msg_aux);
+
+                    /*printf("USER>%s<\n", user);
+                    fflush(stdout);
+                    printf("MESSAGE>%s<\n", msg);
                     fflush(stdout);*/
 
-                    if (strcmp(user_destino, reader_aux) == 0)
-                    {
-                        /*printf("BATEU_CERTO<%s>\n", reader_aux);
-                        fflush(stdout);*/
+                    // /----------/ Procurar Porto do Destinatário /----------/
+                    int port_destino = 0;
+                    FILE *destiny_port;
+                    char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "", reader_aux[BUF_SIZE] = "";
 
-                        ind++;
-                        while (reader[ind] != '\n')
+                    // /----------/ Abrir ficheiro /----------/
+                    destiny_port = fopen("status.txt", "r");
+
+                    // /----------/ Procurar porto para enviar informação /----------/
+                    while (fgets(reader, sizeof(reader), destiny_port))
+                    {
+                        int ind = 0, count = 0;
+                        while (reader[ind] != ',')
                         {
-                            user_port[count] = reader[ind];
+                            reader_aux[ind] = reader[ind];
                             ind++;
-                            count++;
                         }
-                        // === Verificação ===
-                        /*user_port[count] = '\0';
-                        printf("USER_PORT<%s>\n", user_port);
-                        fflush(stdout);*/
 
-                        port_destino = atoi(user_port);
+                        if (strcmp(user_destino, reader_aux) == 0)
+                        {
+                            ind++;
+                            while (reader[ind] != '\n')
+                            {
+                                user_port[count] = reader[ind];
+                                ind++;
+                                count++;
+                            }
+                            port_destino = atoi(user_port);
+                        }
 
-                        /*printf("USER_PORT_INT<%d>\n", port_destino);
-                        fflush(stdout);*/
+                        strcpy(reader, "");
+                    }
+                    // /----------/ Fechar ficheiro /----------/
+                    fclose(destiny_port);
+
+                    /*// /----------/ Preparar ficheiro de sincronização /----------/
+                    FILE *com_file;
+                    char com_filename[BUF_SIZE] = "", com_aux[BUF_SIZE] = "";
+
+                    sprintf(com_aux, "%d", client_port);
+
+                    strcat(com_filename, user_port);
+                    strcat(com_filename, "_");
+                    strcat(com_filename, com_aux);
+                    strcat(com_filename, ".com");
+
+                    // /----------/ Criar ficheiro de sincronização /----------/
+                    if ((com_file = fopen(com_filename, "a")) == NULL)
+                    {
+                        printf("(%s) Erro na criação do com_file\n", username);
+                        fflush(stdout);
+                        exit(1);
+                    }
+                    fclose(com_file);
+                    com_file = 0;*/
+
+                    /*// /----------/ Verificar ficheiro de sincronização /----------/
+                    for (int i = 0; i < 5; i++)
+                    {
+                        printf("(%s) Esperar que seja aceite\n", username);
+                        fflush(stdout);
+
+                        if ((com_file = fopen(com_filename, "at+")) == NULL)
+                        {
+                            printf("(%s) Erro na abertura do com_file\n", username);
+                            fflush(stdout);
+                            exit(1);
+                        }
+                        // com_file = fopen(com_filename, "r");
+                        char sinc_sign[2] = "";
+                        fgets(sinc_sign, sizeof(sinc_sign), com_file);
+                        fflush(stdout);
+
+                        printf("(%s) Li >%s< do ficheiro\n", username, sinc_sign);
+                        fflush(stdout);
+
+                        if (strncmp("OK", sinc_sign, 2) == 0)
+                        {
+                            printf("(%s) Vou enviar\n", username);
+                            fflush(stdout);*/
+
+                    // /----------/ Socket para enviar mensagem /----------/
+                    int send_fd = 0;
+                    struct sockaddr_in receiver_addr;
+
+                    if ((send_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+                    {
+                        // socket() sem sucesso
+                        printf("(%s) Erro no socket() de envio\n", username);
+                        fflush(stdout);
+                        exit(1);
                     }
 
-                    strcpy(reader, "");
-                }
-                // /----------/ Fechar ficheiro /----------/
-                fclose(destiny_port);
-
-                // /----------/ Socket para enviar mensagem /----------/
-                int send_fd;
-                //, connection_fd;
-                struct sockaddr_in sender_adrr, receiver_addr;
-
-                if ((send_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
-                {
+                    // /----------/ Limpar endereço de envio /----------/
                     bzero(&receiver_addr, sizeof(receiver_addr));
 
                     // socket() com sucesso
+                    printf("(%s) Socket() de envio com sucesso\n", username);
+                    fflush(stdout);
 
-                    sender_adrr.sin_family = AF_INET;
-                    sender_adrr.sin_addr.s_addr = inet_addr("127.0.0.1");
-                    sender_adrr.sin_port = htons(port_destino);
+                    // /----------/ Estabelececr Parâmetros do socket /----------/
+                    receiver_addr.sin_family = AF_INET;
+                    receiver_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+                    receiver_addr.sin_port = htons(port_destino);
 
-                    if (connect(send_fd, (SA *)&sender_adrr, sizeof(sender_adrr)) == 0)
+                    if (connect(send_fd, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr)) < 0)
                     {
-                        // connect() com sucesso
-
-                        send(send_fd, msg, strlen(msg), 0);
+                        // connect() sem sucesso
+                        printf("(%s) Erro no connect() de envio\n", username);
                         fflush(stdout);
-
-                        shutdown(send_fd, SHUT_RDWR);
-                        close(send_fd);
+                        exit(1);
                     }
+                    // connect() com sucesso
+                    printf("(%s) Connect() de envio com sucesso\n", username);
+                    fflush(stdout);
+
+                    // /----------/ Enviar Mensagem /----------/
+                    send(send_fd, msg, strlen(msg), 0);
+                    fflush(stdout);
+
+                    printf("(%s) Enviei com sucesso\n===================\n\n", username);
+                    fflush(stdout);
+
+                    // /----------/ Terminar Socket /----------/
+                    // shutdown(send_fd, SHUT_RDWR);
+                    close(send_fd);
+
+                    // /----------/ Fechar e eliminar file de sincronização /----------/
+                    // fclose(com_file);
+                    // remove(com_filename);
+
+                    exit(0);
                 }
+
+                // DEBUG
+                /*char OK_sign[BUF_SIZE] = "OK";
+                fwrite(OK_sign, sizeof(char), strlen(OK_sign), com_file);
+                fflush(stdout);*/
+
+                // fclose(com_file);
+                //  remove(com_filename);
+
+                printf("(%s)Envio sem sucesso\n===================\n\n", username);
+                fflush(stdout);
+
+                exit(1);
             }
+
+            // /====================/ (list) Listar Utilizadores Ativos /====================/
             else if (strcmp(option, "list") == 0)
             {
 
@@ -412,8 +474,6 @@ void menu_client(int client_fd, char username[])
                         ind++;
                     }
                     user[ind] = '\0';
-                    /*printf("USER<%s>\n", user);
-                    fflush(stdout);*/
 
                     if (strcmp(user, username) != 0 && strcmp(user, "admin") != 0)
                     {
@@ -426,6 +486,7 @@ void menu_client(int client_fd, char username[])
                 // /----------/ Fechar ficheiro /----------/
                 fclose(online_status);
             }
+            // /====================/ (help) Listar e explicar comandos possíveis /====================/
             else if (strcmp(option, "help") == 0)
             {
                 char help_menu[] = "\n==========================================\n                  HELP\n\n";
@@ -437,6 +498,7 @@ $ list - Listar utilizadores online\n\
 $ exit - Sair / Logout \n\n ";
                 send_visual(client_fd, help);
             }
+            // /====================/ (exit) Efetuar Logout /====================/
             else if (strcmp(option, "exit") == 0)
             {
                 char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
@@ -458,7 +520,6 @@ $ exit - Sair / Logout \n\n ";
 
                 while (fgets(read_status, sizeof(read_status), status))
                 {
-                    // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
                     fflush(stdout);
 
                     if (strcmp(to_off_status, read_status) != 0)
@@ -488,91 +549,122 @@ $ exit - Sair / Logout \n\n ";
             }
         }
     }
-
+    // /====================/ (RECEIVE END) Receber Mensagens /====================/
     else
     {
-        while (1)
+        /*
+        int port_lido = 0;
+        FILE *available_ports;
+        char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "";
+
+        // /----------/ Fechar ficheiro /----------/
+        available_ports = fopen("status.txt", "r");
+
+        // /----------/ Ler um Porto para tentar receber informação /----------/
+        while (fgets(reader, sizeof(reader), available_ports))
         {
-            int port_lido = 0;
-            FILE *available_ports;
-            char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "";
-
-            // /----------/ Fechar ficheiro /----------/
-            available_ports = fopen("status.txt", "r");
-
-            // /----------/ Ler um Porto para tentar receber informação /----------/
-            while (fgets(reader, sizeof(reader), available_ports))
-            {
-                strcpy(reader, "");
-                int ind = 0, count = 0;
-                while (reader[ind] != ',')
-                    ind++;
-
+            strcpy(reader, "");
+            int ind = 0, count = 0;
+            while (reader[ind] != ',')
                 ind++;
 
-                while (reader[ind] != '\n')
-                {
-                    user_port[count] = reader[ind];
-                    ind++;
-                    count++;
-                }
+            ind++;
 
-                user_port[count] = '\0';
-                printf("USER_PORT<%s>\n", user_port);
-                fflush(stdout);
-
-                port_lido = atoi(user_port);
-
-                printf("USER_PORT_INT<%d>\n", port_lido);
-                fflush(stdout);
-            }
-            // /----------/ Fechar ficheiro /----------/
-            fclose(available_ports);
-
-            // /----------/ Socket para receber mensagem /----------/
-            int receive_fd, connection_fd, client_addr_size;
-            struct sockaddr_in receiver_adrr, sender_addr;
-
-            if ((receive_fd = socket(AF_INET, SOCK_STREAM, 0)) > 0)
+            while (reader[ind] != '\n')
             {
-                // socket() com sucesso
+                user_port[count] = reader[ind];
+                ind++;
+                count++;
+            }
 
-                receiver_adrr.sin_family = AF_INET;
-                receiver_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
-                receiver_adrr.sin_port = htons(port_lido);
+            user_port[count] = '\0';
+            printf("USER_PORT<%s>\n", user_port);
+            fflush(stdout);
 
-                if ((bind(receive_fd, (SA *)&receiver_adrr, sizeof(receiver_adrr))) == 0)
+            port_lido = atoi(user_port);
+
+            printf("USER_PORT_INT<%d>\n", port_lido);
+            fflush(stdout);
+        }
+        // /----------/ Fechar ficheiro /----------/
+        fclose(available_ports);
+        */
+
+        // /----------/ Socket para receber mensagem /----------/
+        int connection_fd, sender_fd, sender_addr_size;
+        struct sockaddr_in receiver_adrr, sender_addr;
+
+        if ((connection_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
+        {
+            // socket() sem sucesso
+            printf("(%s) Erro no socket() do receiver\n", username);
+            fflush(stdout);
+            exit(1);
+        }
+        // socket() com sucesso
+        printf("(%s) socket() do receiver com sucesso\n", username);
+        fflush(stdout);
+
+        bzero((void *)&receiver_adrr, sizeof(receiver_adrr));
+        receiver_adrr.sin_family = AF_INET;
+        receiver_adrr.sin_addr.s_addr = htonl(INADDR_ANY);
+        receiver_adrr.sin_port = htons(client_port);
+
+        if ((bind(connection_fd, (struct sockaddr *)&receiver_adrr, sizeof(receiver_adrr))) < 0)
+        {
+            // bind() sem sucesso
+            printf("(%s) Erro no bind() do receiver\n", username);
+            fflush(stdout);
+            exit(1);
+        }
+        // bind() com sucesso
+        printf("(%s) bind() do receiver com sucesso\n", username);
+        fflush(stdout);
+
+        if ((listen(connection_fd, 5)) < 0)
+        {
+            // listen() sem sucesso
+            printf("(%s) Erro no listen() do receiver\n", username);
+            fflush(stdout);
+            exit(1);
+        }
+        // listen() com sucesso
+        printf("(%s) listen() do receiver com sucesso\n", username);
+        fflush(stdout);
+
+        sender_addr_size = sizeof(sender_addr);
+
+        while (1)
+        {
+            while (waitpid(-1, NULL, WNOHANG) > 0)
+                ;
+            sender_fd = accept(connection_fd, (struct sockaddr *)&sender_addr, (socklen_t *)&sender_addr_size);
+            if (sender_fd > 0)
+            {
                 {
-                    // bind() com sucesso
-                    if ((listen(receive_fd, 5)) == 0)
+                    if (fork() == 0)
                     {
-                        // listen() com sucesso
-                        connection_fd = accept(receive_fd, (SA *)&sender_addr, (socklen_t *)&client_addr_size);
-                        if (connection_fd >= 0)
-                        {
-                            // receiver aceitou o sender
+                        close(connection_fd);
 
-                            char msg_received[BUF_SIZE] = "";
-                            // ssize_t size_msg_received =
-                            recv(connection_fd, msg_received, BUF_SIZE, 0);
-                            fflush(stdout);
+                        char msg_received[BUF_SIZE] = "";
+                        // ssize_t size_msg_received =
+                        recv(sender_fd, msg_received, BUF_SIZE, 0);
+                        fflush(stdout);
+                        send_visual(client_fd, msg_received);
 
-                            send_visual(client_fd, msg_received);
-
-                            shutdown(connection_fd, SHUT_RDWR);
-                            shutdown(receive_fd, SHUT_RDWR);
-                            close(receive_fd);
-                            close(connection_fd);
-                        }
+                        exit(0);
                     }
                 }
+                // shutdown(connection_fd, SHUT_RDWR);
+
+                close(connection_fd);
             }
         }
     }
 }
 
 /*-----------------------------------------------------------------------
-                             MENU ADMIN
+                         MENU ADMIN
 -----------------------------------------------------------------------*/
 void menu_admin(int admin_fd)
 {
@@ -610,7 +702,6 @@ void menu_admin(int admin_fd)
 
             // /----------/ Print Palavras /----------/
             file_words = fopen("words.txt", "a+");
-            // chmod("words.txt", 0777);
             while (fgets(word, sizeof(word), file_words))
             {
                 send(admin_fd, word, strlen(word), 0);
@@ -636,7 +727,6 @@ void menu_admin(int admin_fd)
             // /----------/ Escrever nova palavra no ficheiro /----------/
             if ((file_words = fopen("words.txt", "a")) != NULL)
             {
-                // chmod("words.txt", 0777);
                 fwrite(new_word, sizeof(char), strlen(new_word), file_words);
 
                 // /----------/ Ajustar \n /----------/
@@ -666,12 +756,9 @@ void menu_admin(int admin_fd)
         {
             if ((file_words = fopen("words.txt", "r")) != NULL)
             {
-                // chmod("words.txt", 0777);
                 FILE *file_words_aux;
                 if ((file_words_aux = fopen("words_aux.txt", "wt+")) != NULL)
                 {
-                    // chmod("words_aux.txt", 0777);
-
                     // /----------/ Printf remover /----------/
                     char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
                     send_visual(admin_fd, menu_remover);
@@ -701,7 +788,6 @@ void menu_admin(int admin_fd)
                     // /----------/ Escrever no ficheiro auxiliar /----------/
                     while (fgets(word, sizeof(word), file_words))
                     {
-                        // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", word, word_to_delete, strncmp(word_to_delete, word, tamanho));
                         fflush(stdout);
                         if (strncmp(word_to_delete, word, tamanho) != 0)
                         {
@@ -881,7 +967,6 @@ void menu_admin(int admin_fd)
 
             while (fgets(read_status, sizeof(read_status), status))
             {
-                // printf("Word>%s<|Word_to_delete>%s<|Comparation>%d<\n", read_status, to_off_status, strcmp(to_off_status, read_status));
                 fflush(stdout);
 
                 if (strcmp(to_off_status, read_status) != 0)
@@ -909,6 +994,9 @@ void menu_admin(int admin_fd)
     }
 }
 
+/*-----------------------------------------------------------------------
+                            SEND VISUAL
+-----------------------------------------------------------------------*/
 void send_visual(int fd, char msg[])
 {
     send(fd, msg, strlen(msg), 0);

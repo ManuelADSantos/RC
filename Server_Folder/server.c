@@ -290,10 +290,10 @@ void menu_client(int client_fd, char username[])
                     strcat(msg_copy, " ");
                     if ((words_to_remove = fopen("words.txt", "r")) != NULL)
                     {
-                        printf("\nFILE_WORDs_TO_REMOVE\n");
+                        /*printf("\nFILE_WORDs_TO_REMOVE\n");
                         fflush(stdout);
                         printf("msg_copy>%s<\n", msg_copy);
-                        fflush(stdout);
+                        fflush(stdout);*/
 
                         // Comparar palavra do file com palavras da mensagem
                         int ind = 0;
@@ -301,18 +301,18 @@ void menu_client(int client_fd, char username[])
                         {
                             if (msg_copy[i] != ' ')
                             {
-                                printf("NAO E ESPACO\n");
-                                fflush(stdout);
+                                /*printf("NAO E ESPACO\n");
+                                fflush(stdout);*/
                                 msg_word_read[ind] = msg_copy[i];
                                 ind++;
 
-                                printf("msg_word_read>%s<\n", msg_word_read);
-                                fflush(stdout);
+                                /*printf("msg_word_read>%s<\n", msg_word_read);
+                                fflush(stdout);*/
                             }
                             else
                             {
-                                printf("E ESPACO\n");
-                                fflush(stdout);
+                                /*printf("E ESPACO\n");
+                                fflush(stdout);*/
 
                                 strcpy(msg_word_read_compare, msg_word_read);
                                 for (int j = 0; j < strlen(msg_word_read); j++)
@@ -325,14 +325,14 @@ void menu_client(int client_fd, char username[])
                                         if (forbidden_word[j] == '\n')
                                             forbidden_word[j] = 0;
                                     }
-                                    printf("forbidden_word>%s<\n", forbidden_word);
-                                    fflush(stdout);
+                                    /*printf("forbidden_word>%s<\n", forbidden_word);
+                                    fflush(stdout);*/
 
                                     // Palavra proibida
                                     if (strcmp(msg_word_read_compare, forbidden_word) == 0)
                                     {
-                                        printf("PROIBIDA>%s<|DETETADA>%s<\n", forbidden_word, msg_word_read);
-                                        fflush(stdout);
+                                        /*printf("PROIBIDA>%s<|DETETADA>%s<\n", forbidden_word, msg_word_read);
+                                        fflush(stdout);*/
                                         for (int j = 0; j < strlen(msg_word_read); j++)
                                             msg_word_read[j] = '*';
                                         break;
@@ -343,8 +343,8 @@ void menu_client(int client_fd, char username[])
                                 strcat(msg_aux, msg_word_read);
                                 strcat(msg_aux, " ");
 
-                                printf("msg_aux so far>%s<\n", msg_aux);
-                                fflush(stdout);
+                                /*printf("msg_aux so far>%s<\n", msg_aux);
+                                fflush(stdout);*/
 
                                 for (int j = 0; j < sizeof(msg_word_read) / sizeof(char); j++)
                                     msg_word_read[j] = 0;

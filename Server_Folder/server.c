@@ -150,8 +150,7 @@ void login(int client_fd, char username[])
         {
             // /----------/ Caso não exista o username em causa /----------/
             char msg_get_user_error[] = "  Username não existe. Insira um username válido\n";
-            send(client_fd, msg_get_user_error, strlen(msg_get_user_error), 0);
-            fflush(stdout);
+            send_visual(client_fd, msg_get_user_error);
             option = -1;
         }
         else
@@ -166,8 +165,7 @@ void login(int client_fd, char username[])
             {
                 // /----------/ Pedir password /----------/
                 char msg_get_password[] = "\n Password: ";
-                send(client_fd, msg_get_password, strlen(msg_get_password), 0);
-                fflush(stdout);
+                send_visual(client_fd, msg_get_password);
 
                 // /----------/ Receber password inserido /----------/
                 char password[BUF_SIZE] = "";
@@ -179,7 +177,7 @@ void login(int client_fd, char username[])
                 {
                     // /----------/ LOGIN AUTORIZADO /----------/
                     // Construir mensagem de sucesso
-                    char msg_login_sucess[] = "\n             Bem vind@ ";
+                    char msg_login_sucess[BUF_SIZE] = "\n             Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
 
@@ -214,8 +212,7 @@ void login(int client_fd, char username[])
                     tenta[0] = ten;
                     strcat(msg_get_password_error, tenta);
                     strcat(msg_get_password_error, " tentativas restantes!\n");
-                    send(client_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
-                    fflush(stdout);
+                    send_visual(client_fd, msg_get_password_error);
                     if (tentativas == 3)
                     {
                         option = -1;
@@ -282,35 +279,92 @@ void menu_client(int client_fd, char username[])
                         aux++;
                     }
 
-                    // /----------/ Tratar Mensagem a Enviar /----------/
+                    // /----------/ Tratar/Filtrar Mensagem a Enviar /----------/
                     // /----------/ Abrir ficheiro /----------/
                     FILE *words_to_remove;
-                    char forbidden_word[BUF_SIZE] = "", word_read[BUF_SIZE] = "";
-                    char msg_aux[BUF_SIZE] = "";
+                    char forbidden_word[BUF_SIZE] = "", msg_word_read[BUF_SIZE] = "", msg_word_read_compare[BUF_SIZE] = "";
+                    char msg_aux[BUF_SIZE] = "", msg_copy[BUF_SIZE] = "";
 
                     // /----------/ Print Palavras /----------/
+                    strcpy(msg_copy, msg);
+                    strcat(msg_copy, " ");
                     if ((words_to_remove = fopen("words.txt", "r")) != NULL)
                     {
-                        while (fgets(word_read, sizeof(word_read), words_to_remove))
+                        printf("\nFILE_WORDs_TO_REMOVE\n");
+                        fflush(stdout);
+                        printf("msg_copy>%s<\n", msg_copy);
+                        fflush(stdout);
+
+                        // Comparar palavra do file com palavras da mensagem
+                        int ind = 0;
+                        for (int i = 0; i < strlen(msg_copy); i++)
                         {
-                            for (int i = 0; i < strlen(word_read); i++)
+                            if (msg_copy[i] != ' ')
                             {
-                                if (word_read[i] == '\n')
-                                    word_read[i] = 0;
+                                printf("NAO E ESPACO\n");
+                                fflush(stdout);
+                                msg_word_read[ind] = msg_copy[i];
+                                ind++;
+
+                                printf("msg_word_read>%s<\n", msg_word_read);
+                                fflush(stdout);
                             }
+                            else
+                            {
+                                printf("E ESPACO\n");
+                                fflush(stdout);
 
-                            printf("WORD_LIDA>%s<\n", word_read);
-                            fflush(stdout);
+                                strcpy(msg_word_read_compare, msg_word_read);
+                                for (int j = 0; j < strlen(msg_word_read); j++)
+                                    msg_word_read_compare[j] = tolower(msg_word_read[j]);
 
-                            strcpy(word_read, "");
+                                while (fgets(forbidden_word, sizeof(forbidden_word), words_to_remove))
+                                {
+                                    for (int j = 0; j < strlen(forbidden_word); j++)
+                                    {
+                                        if (forbidden_word[j] == '\n')
+                                            forbidden_word[j] = 0;
+                                    }
+                                    printf("forbidden_word>%s<\n", forbidden_word);
+                                    fflush(stdout);
+
+                                    // Palavra proibida
+                                    if (strcmp(msg_word_read_compare, forbidden_word) == 0)
+                                    {
+                                        printf("PROIBIDA>%s<|DETETADA>%s<\n", forbidden_word, msg_word_read);
+                                        fflush(stdout);
+                                        for (int j = 0; j < strlen(msg_word_read); j++)
+                                            msg_word_read[j] = '*';
+                                        break;
+                                    }
+                                }
+                                fseek(words_to_remove, 0, SEEK_SET);
+
+                                strcat(msg_aux, msg_word_read);
+                                strcat(msg_aux, " ");
+
+                                printf("msg_aux so far>%s<\n", msg_aux);
+                                fflush(stdout);
+
+                                for (int j = 0; j < sizeof(msg_word_read) / sizeof(char); j++)
+                                    msg_word_read[j] = 0;
+
+                                ind = 0;
+                            }
                         }
+
+                        // /----------/ Mensagem tratada colocada em msg_aux /----------/
+                        strcpy(msg, msg_aux);
+
+                        printf("msg so far>%s<\n", msg);
+                        fflush(stdout);
 
                         // /----------/ Fechar ficheiro /----------/
                         fclose(words_to_remove);
                     }
 
                     // /----------/ Compor Mensagem a Enviar /----------/
-                    // strcpy(msg_aux, "");
+                    strcpy(msg_aux, "");
                     struct tm *ptr;
                     time_t t;
                     t = time(NULL);
@@ -635,11 +689,13 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             // /----------/ Print Palavras /----------/
-            file_words = fopen("words.txt", "a+");
-            while (fgets(word, sizeof(word), file_words))
+            if ((file_words = fopen("words.txt", "r")) != NULL)
             {
-                send(admin_fd, word, strlen(word), 0);
-                fflush(stdout);
+                while (fgets(word, sizeof(word), file_words))
+                {
+                    send(admin_fd, word, strlen(word), 0);
+                    fflush(stdout);
+                }
             }
 
             // /----------/ Fechar ficheiro /----------/
@@ -945,4 +1001,5 @@ void send_visual(int fd, char msg[])
 {
     send(fd, msg, strlen(msg), 0);
     fflush(stdout);
+    return;
 }

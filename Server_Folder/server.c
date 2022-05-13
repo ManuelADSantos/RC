@@ -795,8 +795,11 @@ void menu_admin(int admin_fd)
                             fflush(stdout);
                         }
                     }
+
+                    fclose(file_words_aux);
                     fclose(file_words);
 
+                    file_words_aux = fopen("words_aux.txt", "r");
                     file_words = fopen("words.txt", "w");
                     // chmod("words.txt", 0777);
                     fseek(file_words_aux, 0, SEEK_SET);

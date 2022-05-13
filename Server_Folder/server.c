@@ -47,6 +47,38 @@ int main(int argc, char *argv[])
     // Create users directory
     mkdir("./users", 0777);
 
+    // Check id admin exists
+    FILE *check_admin;
+    if ((check_admin = fopen("./users/admin.txt", "r")) == NULL)
+    {
+        // /----------/ Criar e abrir ficheiro /----------/
+        check_admin = fopen("./users/admin.txt", "w");
+
+        // /----------/ Pedir password /----------/
+        printf("\n     !!! Sistema sem administrador !!!\n\n Bem vindo novo admin. Crie a sua conta\n\n  Nova password-->>");
+        fflush(stdout);
+
+        // /----------/ Receber password inserido /----------/
+        char password[BUF_SIZE] = "";
+        scanf("%s", password);
+        // password[strlen(password)] = 0;
+
+        // /----------/ Registar password /----------/
+        fwrite(password, sizeof(char), strlen(password), check_admin);
+
+        // /----------/ Confirmar criação /----------/
+        printf("\n Utilizador admin criado\n");
+        fflush(stdout);
+
+        // /----------/ Fechar ficheiro /----------/
+        fclose(check_admin);
+    }
+    else
+    {
+        fclose(check_admin);
+    }
+
+    // Estabelecimento do socket
     int fd, client;
     struct sockaddr_in addr, client_addr;
     int client_addr_size;
@@ -63,6 +95,10 @@ int main(int argc, char *argv[])
     if (listen(fd, 5) < 0)
         erro("na funcao listen");
     client_addr_size = sizeof(client_addr);
+
+    printf("\n Pronto a receber clientes...\n\n");
+    fflush(stdout);
+
     while (1)
     {
         // clean finished child processes, avoiding zombies
@@ -76,6 +112,8 @@ int main(int argc, char *argv[])
             client_port++;
             if (fork() == 0)
             {
+                printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
+                fflush(stdout);
                 close(fd);
                 process_client(client);
                 exit(0);
@@ -291,7 +329,7 @@ void menu_client(int client_fd, char username[])
 
                     for (int i = 0; i < strlen(msg_copy); i++)
                     {
-                        printf("Letra>%c<\n", msg_copy[i]);
+                        // printf("Letra>%c<\n", msg_copy[i]);
                         if (msg_copy[i] == '\n' || msg_copy[i] == 13 /*Carriage Return*/)
                             msg_copy[i] = ' ';
                     }

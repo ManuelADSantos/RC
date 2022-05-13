@@ -11,9 +11,14 @@
 #include <string.h>
 #include <unistd.h>
 #include <netdb.h>
+#include <signal.h>
 
 #define BUF_SIZE 1024
 
+pid_t pid = 0;
+
+// ==================== Prototypes ====================
+void sig_handler(int sig);
 void erro(char *msg);
 
 int main(int argc, char *argv[])
@@ -38,7 +43,6 @@ int main(int argc, char *argv[])
         erro("Connect");
 
     // ========== From here ==========
-    pid_t pid = 0;
     if ((pid = fork()) == 0)
     // Child
     {
@@ -60,8 +64,11 @@ int main(int argc, char *argv[])
     else
     // Parent
     {
+        // Update signal handler
+        signal(SIGINT, sig_handler);
         while (1)
         {
+
             char buffer_write[BUF_SIZE] = "";
             if (send(fd, NULL, 0, 0) >= 0)
             {
@@ -78,8 +85,6 @@ int main(int argc, char *argv[])
             }
         }
     }
-    close(fd);
-    exit(0);
     // ========== To Here ==========
 }
 
@@ -87,4 +92,18 @@ void erro(char *msg)
 {
     printf("Erro: %s\n", msg);
     exit(-1);
+}
+
+// ==================== Signal Handler Function ====================
+void sig_handler(int sig)
+{
+    // If SIGINT is cacthed
+    if (sig == SIGINT)
+    {
+        kill(pid, SIGINT);
+        wait(NULL);
+        printf("\nProcess terminating by ctrl-C ...\n");
+        fflush(stdout);
+        exit(0);
+    }
 }

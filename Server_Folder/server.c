@@ -55,7 +55,7 @@ int main(int argc, char *argv[])
         check_admin = fopen("./users/admin.txt", "w");
 
         // /----------/ Pedir password /----------/
-        printf("\n     !!! Sistema sem administrador !!!\n\n Bem vindo novo admin. Crie a sua conta\n\n  Nova password-->>");
+        printf("\n     !!! Sistema sem administrador !!!\n\n Bem vindo novo admin. Crie a sua conta\n\n Nova password-->>");
         fflush(stdout);
 
         // /----------/ Receber password inserido /----------/
@@ -101,8 +101,6 @@ int main(int argc, char *argv[])
 
     while (1)
     {
-        // clean finished child processes, avoiding zombies
-        // must use WNOHANG or would block whenever a child process was working
         while (waitpid(-1, NULL, WNOHANG) > 0)
             ;
         // wait for new connection
@@ -131,19 +129,21 @@ void process_client(int client_fd)
 {
     while (1)
     {
+        // /----------/ Estabelecer handler de SIGINT para o default /----------/
+        signal(SIGINT, SIG_DFL);
 
         // /----------/ Login /----------/
         char username[BUF_SIZE] = "";
         login(client_fd, username);
 
+        // /----------/ Menu Admin /----------/
         if (strcmp(username, "admin") == 0)
         {
-            // /----------/ Menu Admin /----------/
             menu_admin(client_fd);
         }
+        // /----------/ Menu Client /----------/
         else
         {
-            // /----------/ Menu Client /----------/
             menu_client(client_fd, username);
         }
     }
@@ -404,8 +404,8 @@ void menu_client(int client_fd, char username[])
                         // /----------/ Mensagem tratada colocada em msg_aux /----------/
                         strcpy(msg, msg_aux);
 
-                        printf("msg so far>%s<\n", msg);
-                        fflush(stdout);
+                        /*printf("msg so far>%s<\n", msg);
+                        fflush(stdout);*/
 
                         // /----------/ Fechar ficheiro /----------/
                         fclose(words_to_remove);
@@ -609,7 +609,7 @@ $ exit - Sair / Logout \n\n ";
                 }
                 fclose(status);
                 fclose(status_aux);
-                // remove("status_aux.txt");
+                remove("status_aux.txt");
 
                 kill(pid, SIGINT);
                 wait(NULL);
@@ -737,13 +737,15 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             // /----------/ Print Palavras /----------/
-            if ((file_words = fopen("words.txt", "r")) != NULL)
+            if ((file_words = fopen("words.txt", "r")) == NULL)
             {
-                while (fgets(word, sizeof(word), file_words))
-                {
-                    send(admin_fd, word, strlen(word), 0);
-                    fflush(stdout);
-                }
+                file_words = fopen("words.txt", "w");
+            }
+
+            while (fgets(word, sizeof(word), file_words))
+            {
+                send(admin_fd, word, strlen(word), 0);
+                fflush(stdout);
             }
 
             // /----------/ Fechar ficheiro /----------/
@@ -849,7 +851,6 @@ void menu_admin(int admin_fd)
 
                     file_words_aux = fopen("words_aux.txt", "r");
                     file_words = fopen("words.txt", "w");
-                    // chmod("words.txt", 0777);
                     fseek(file_words_aux, 0, SEEK_SET);
                     while (fgets(word, sizeof(word), file_words_aux))
                     {
@@ -859,7 +860,7 @@ void menu_admin(int admin_fd)
                     }
 
                     fclose(file_words_aux);
-                    // remove("words_aux.txt");
+                    remove("words_aux.txt");
                 }
                 fclose(file_words);
                 fflush(stdout);
@@ -1034,7 +1035,7 @@ void menu_admin(int admin_fd)
             }
             fclose(status);
             fclose(status_aux);
-            // remove("status_aux.txt");
+            remove("status_aux.txt");
 
             break;
         }

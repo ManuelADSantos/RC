@@ -752,7 +752,7 @@ void menu_admin(int admin_fd)
             if ((file_words = fopen("words.txt", "r")) != NULL)
             {
                 FILE *file_words_aux;
-                if ((file_words_aux = fopen("words_aux.txt", "wt+")) != NULL)
+                if ((file_words_aux = fopen("words_aux.txt", "w")) != NULL)
                 {
                     // /----------/ Printf remover /----------/
                     char menu_remover[] = "\n==========================================\n       REMOVER PALAVRA\n\n";
@@ -797,7 +797,7 @@ void menu_admin(int admin_fd)
                     }
                     fclose(file_words);
 
-                    file_words = fopen("words.txt", "wt");
+                    file_words = fopen("words.txt", "w");
                     // chmod("words.txt", 0777);
                     fseek(file_words_aux, 0, SEEK_SET);
                     while (fgets(word, sizeof(word), file_words_aux))

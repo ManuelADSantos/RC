@@ -11,6 +11,8 @@
 #include <sys/stat.h>
 #include <arpa/inet.h>
 #include <time.h>
+#include <signal.h>
+#include <ctype.h>
 
 /*-----------------------------------------------------------------------
                                 MACROS
@@ -281,7 +283,34 @@ void menu_client(int client_fd, char username[])
                     }
 
                     // /----------/ Tratar Mensagem a Enviar /----------/
+                    // /----------/ Abrir ficheiro /----------/
+                    FILE *words_to_remove;
+                    char forbidden_word[BUF_SIZE] = "", word_read[BUF_SIZE] = "";
                     char msg_aux[BUF_SIZE] = "";
+
+                    // /----------/ Print Palavras /----------/
+                    if ((words_to_remove = fopen("words.txt", "r")) != NULL)
+                    {
+                        while (fgets(word_read, sizeof(word_read), words_to_remove))
+                        {
+                            for (int i = 0; i < strlen(word_read); i++)
+                            {
+                                if (word_read[i] == '\n')
+                                    word_read[i] = 0;
+                            }
+
+                            printf("WORD_LIDA>%s<\n", word_read);
+                            fflush(stdout);
+
+                            strcpy(word_read, "");
+                        }
+
+                        // /----------/ Fechar ficheiro /----------/
+                        fclose(words_to_remove);
+                    }
+
+                    // /----------/ Compor Mensagem a Enviar /----------/
+                    // strcpy(msg_aux, "");
                     struct tm *ptr;
                     time_t t;
                     t = time(NULL);
@@ -353,8 +382,8 @@ void menu_client(int client_fd, char username[])
                     bzero(&receiver_addr, sizeof(receiver_addr));
 
                     // socket() com sucesso
-                    printf("(%s) Socket() de envio com sucesso\n", username);
-                    fflush(stdout);
+                    /*printf("(%s) Socket() de envio com sucesso\n", username);
+                    fflush(stdout);*/
 
                     // /----------/ Estabelececr Parâmetros do socket /----------/
                     receiver_addr.sin_family = AF_INET;
@@ -369,15 +398,15 @@ void menu_client(int client_fd, char username[])
                         exit(1);
                     }
                     // connect() com sucesso
-                    printf("(%s) Connect() de envio com sucesso\n", username);
-                    fflush(stdout);
+                    /*printf("(%s) Connect() de envio com sucesso\n", username);
+                    fflush(stdout);*/
 
                     // /----------/ Enviar Mensagem /----------/
                     send(send_fd, msg, strlen(msg), 0);
                     fflush(stdout);
 
-                    printf("(%s) Enviei com sucesso\n===================\n\n", username);
-                    fflush(stdout);
+                    /*printf("(%s) Enviei com sucesso\n===================\n\n", username);
+                    fflush(stdout);*/
 
                     // /----------/ Terminar Socket /----------/
                     // shutdown(send_fd, SHUT_RDWR);
@@ -502,8 +531,8 @@ $ exit - Sair / Logout \n\n ";
             exit(1);
         }
         // socket() com sucesso
-        printf("(%s) socket() do receiver com sucesso\n", username);
-        fflush(stdout);
+        /*printf("(%s) socket() do receiver com sucesso\n", username);
+        fflush(stdout);*/
 
         bzero((void *)&receiver_adrr, sizeof(receiver_adrr));
         receiver_adrr.sin_family = AF_INET;
@@ -518,8 +547,8 @@ $ exit - Sair / Logout \n\n ";
             exit(1);
         }
         // bind() com sucesso
-        printf("(%s) bind() do receiver com sucesso\n", username);
-        fflush(stdout);
+        /*printf("(%s) bind() do receiver com sucesso\n", username);
+        fflush(stdout);*/
 
         if ((listen(connection_fd, 5)) < 0)
         {
@@ -529,8 +558,8 @@ $ exit - Sair / Logout \n\n ";
             exit(1);
         }
         // listen() com sucesso
-        printf("(%s) listen() do receiver com sucesso\n", username);
-        fflush(stdout);
+        /*printf("(%s) listen() do receiver com sucesso\n", username);
+        fflush(stdout);*/
 
         sender_addr_size = sizeof(sender_addr);
 
@@ -545,8 +574,8 @@ $ exit - Sair / Logout \n\n ";
             if (sender_fd > 0)
             {
                 // listen() com sucesso
-                printf("(%s) accept() do receiver com sucesso\n", username);
-                fflush(stdout);
+                /*printf("(%s) accept() do receiver com sucesso\n", username);
+                fflush(stdout);*/
                 {
                     if (fork() == 0)
                     {
@@ -632,6 +661,11 @@ void menu_admin(int admin_fd)
             // /----------/ Escrever nova palavra no ficheiro /----------/
             if ((file_words = fopen("words.txt", "a")) != NULL)
             {
+                for (int i = 0; i < strlen(new_word); i++)
+                {
+                    new_word[i] = tolower(new_word[i]);
+                }
+
                 fwrite(new_word, sizeof(char), strlen(new_word), file_words);
 
                 // /----------/ Ajustar \n /----------/
@@ -672,6 +706,11 @@ void menu_admin(int admin_fd)
                     char word_to_delete[BUF_SIZE] = "";
                     recv(admin_fd, word_to_delete, BUF_SIZE, 0);
                     fflush(stdout);
+
+                    for (int i = 0; i < strlen(word_to_delete); i++)
+                    {
+                        word_to_delete[i] = tolower(word_to_delete[i]);
+                    }
 
                     // /----------/ Ajustar \n /----------/
                     int count = 0;

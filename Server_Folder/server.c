@@ -206,7 +206,7 @@ void login(int client_fd, char username[])
                 {
                     // /----------/ PASSWORD ERRADA /----------/
                     tentativas++;
-                    char msg_get_password_error[] = "  Password Incorrreta. ";
+                    char msg_get_password_error[BUF_SIZE] = "  Password Incorrreta. ";
                     char ten = (3 - tentativas) + '0';
                     char tenta[2] = "";
                     tenta[0] = ten;
@@ -889,117 +889,112 @@ void menu_admin(int admin_fd)
 
             if (fopen(remove_username, "r") == NULL)
             {
-                char msg_get_remove_user_dont_exist[] = "\n User does not exist";
-                send(admin_fd, msg_get_remove_user_dont_exist, strlen(msg_get_remove_user_dont_exist), 0);
-                fflush(stdout);
-            }
-            else
-            {
-                FILE *admin_auth;
-                char admin_pass[BUF_SIZE] = "";
-                admin_auth = fopen("./users/admin.txt", "r");
-                fread(admin_pass, sizeof(admin_pass), 1, admin_auth);
-                fclose(admin_auth);
-
-                int tentativas = 0;
-                while (1)
+                char msg_get_remove_user_dont_exist[BUF_SIZE] = "\n User does not exist";
+                send_visual(admin_fd, msg_get_remove_user_dont_exist);
+                else
                 {
-                    // /----------/ Pedir password /----------/
-                    char msg_get_password[] = "\n Admin password: ";
-                    send(admin_fd, msg_get_password, strlen(msg_get_password), 0);
-                    fflush(stdout);
+                    FILE *admin_auth;
+                    char admin_pass[BUF_SIZE] = "";
+                    admin_auth = fopen("./users/admin.txt", "r");
+                    fread(admin_pass, sizeof(admin_pass), 1, admin_auth);
+                    fclose(admin_auth);
 
-                    // /----------/ Receber password inserido /----------/
-                    char password[BUF_SIZE] = "";
-                    ssize_t size_password = recv(admin_fd, password, BUF_SIZE, 0);
-                    fflush(stdout);
-                    password[size_password - 2] = '\0';
-
-                    if (strcmp(password, admin_pass) == 0)
+                    int tentativas = 0;
+                    while (1)
                     {
-                        // /----------/ LOGIN AUTORIZADO /----------/
-                        char msg_remove_user_sucess[] = "\n User removed";
-                        send(admin_fd, msg_remove_user_sucess, strlen(msg_remove_user_sucess), 0);
-                        fflush(stdout);
+                        // /----------/ Pedir password /----------/
+                        char msg_get_password[BUF_SIZE] = "\n Admin password: ";
+                        send_visual(admin_fd, msg_get_password);
 
-                        remove(remove_username);
-
-                        break;
-                    }
-                    else
-                    {
-                        // /----------/ PASSWORD ERRADA /----------/
-                        printf("%s\n", password);
+                        // /----------/ Receber password inserido /----------/
+                        char password[BUF_SIZE] = "";
+                        ssize_t size_password = recv(admin_fd, password, BUF_SIZE, 0);
                         fflush(stdout);
+                        password[size_password - 2] = '\0';
 
-                        tentativas++;
-                        char msg_get_password_error[] = "  Password Incorrreta. ";
-                        char ten = (3 - tentativas) + '0';
-                        char tenta[2] = "";
-                        tenta[0] = ten;
-                        strcat(msg_get_password_error, tenta);
-                        strcat(msg_get_password_error, " tentativas restantes!\n");
-                        send(admin_fd, msg_get_password_error, strlen(msg_get_password_error), 0);
-                        fflush(stdout);
-                        if (tentativas == 3)
+                        if (strcmp(password, admin_pass) == 0)
+                        {
+                            // /----------/ LOGIN AUTORIZADO /----------/
+                            char msg_remove_user_sucess[BUF_SIZE] = "\n User removed";
+                            send_visual(admin_fd, msg_remove_user_sucess);
+
+                            remove(remove_username);
+
                             break;
+                        }
+                        else
+                        {
+                            // /----------/ PASSWORD ERRADA /----------/
+                            printf("%s\n", password);
+                            fflush(stdout);
+
+                            tentativas++;
+                            char msg_get_password_error[BUF_SIZE] = "  Password Incorrreta. ";
+                            char ten = (3 - tentativas) + '0';
+                            char tenta[2] = "";
+                            tenta[0] = ten;
+                            strcat(msg_get_password_error, tenta);
+                            strcat(msg_get_password_error, " tentativas restantes!\n");
+                            send_visual(admin_fd, msg_get_password_error);
+                            if (tentativas == 3)
+                                break;
+                        }
                     }
                 }
             }
-        }
-        // /====================/ (6) Sair /====================/
-        else if (option[0] == '6')
-        {
-            char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
-            send_visual(admin_fd, menu_admin_logout);
-
-            FILE *status_aux, *status;
-            status_aux = fopen("status_aux.txt", "wt+");
-            status = fopen("status.txt", "r");
-
-            // /----------/ Escrever no ficheiro auxiliar /----------/
-            char read_status[BUF_SIZE] = "";
-            char to_off_status[BUF_SIZE] = "";
-            char aux[10] = "";
-            strcat(to_off_status, "admin,");
-            sprintf(aux, "%d\n", client_port);
-            strcat(to_off_status, aux);
-
-            while (fgets(read_status, sizeof(read_status), status))
+            // /====================/ (6) Sair /====================/
+            else if (option[0] == '6')
             {
-                fflush(stdout);
+                char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
+                send_visual(admin_fd, menu_admin_logout);
 
-                if (strcmp(to_off_status, read_status) != 0)
+                FILE *status_aux, *status;
+                status_aux = fopen("status_aux.txt", "wt+");
+                status = fopen("status.txt", "r");
+
+                // /----------/ Escrever no ficheiro auxiliar /----------/
+                char read_status[BUF_SIZE] = "";
+                char to_off_status[BUF_SIZE] = "";
+                char aux[10] = "";
+                strcat(to_off_status, "admin,");
+                sprintf(aux, "%d\n", client_port);
+                strcat(to_off_status, aux);
+
+                while (fgets(read_status, sizeof(read_status), status))
                 {
-                    fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+                    fflush(stdout);
+
+                    if (strcmp(to_off_status, read_status) != 0)
+                    {
+                        fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
+                        fflush(stdout);
+                    }
+                }
+                fclose(status);
+
+                status = fopen("status.txt", "wt");
+                fseek(status_aux, 0, SEEK_SET);
+                while (fgets(read_status, sizeof(read_status), status_aux))
+                {
+                    fflush(stdout);
+                    fwrite(read_status, sizeof(char), strlen(read_status), status);
                     fflush(stdout);
                 }
-            }
-            fclose(status);
+                fclose(status);
+                fclose(status_aux);
+                // remove("status_aux.txt");
 
-            status = fopen("status.txt", "wt");
-            fseek(status_aux, 0, SEEK_SET);
-            while (fgets(read_status, sizeof(read_status), status_aux))
-            {
-                fflush(stdout);
-                fwrite(read_status, sizeof(char), strlen(read_status), status);
-                fflush(stdout);
+                break;
             }
-            fclose(status);
-            fclose(status_aux);
-            // remove("status_aux.txt");
-
-            break;
         }
     }
-}
 
-/*-----------------------------------------------------------------------
-                            SEND VISUAL
------------------------------------------------------------------------*/
-void send_visual(int fd, char msg[])
-{
-    send(fd, msg, strlen(msg), 0);
-    fflush(stdout);
-    return;
-}
+    /*-----------------------------------------------------------------------
+                                SEND VISUAL
+    -----------------------------------------------------------------------*/
+    void send_visual(int fd, char msg[])
+    {
+        send(fd, msg, strlen(msg), 0);
+        fflush(stdout);
+        return;
+    }

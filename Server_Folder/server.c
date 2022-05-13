@@ -288,6 +288,16 @@ void menu_client(int client_fd, char username[])
                     // /----------/ Print Palavras /----------/
                     strcpy(msg_copy, msg);
                     strcat(msg_copy, " ");
+
+                    for (int i = 0; i < strlen(msg_copy); i++)
+                    {
+                        printf("Letra>%c<\n", msg_copy[i]);
+                        if (msg_copy[i] == '\n' || msg_copy[i] == 13 /*Carriage Return*/)
+                            msg_copy[i] = ' ';
+                    }
+
+                    msg_copy[strlen(msg_copy)] = 0;
+
                     if ((words_to_remove = fopen("words.txt", "r")) != NULL)
                     {
                         /*printf("\nFILE_WORDs_TO_REMOVE\n");

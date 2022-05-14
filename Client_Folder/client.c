@@ -1,7 +1,11 @@
+//FIREWALL - Projeto de Redes de Computadores 2021/2022
+//Manuel Alberto Dionísio dos Santos - 2019231352
+//Matilde Saraiva de Carvalho - 2019233490
+
 /**********************************************************************
  * CLIENTE liga ao servidor (definido em argv[1]) no porto especificado
- * (em argv[2]), escrevendo a palavra predefinida (em argv[3]).
- * Uso: >cliente <enderecoServidor>  <porto>  <Palavra>
+ * (em argv[2])
+ * Uso: >cliente <enderecoServidor>  <porto> 
  **********************************************************************/
 #include <stdio.h>
 #include <sys/types.h>

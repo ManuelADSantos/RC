@@ -1,3 +1,7 @@
+//FIREWALL - Projeto de Redes de Computadores 2021/2022
+//Manuel Alberto Dionísio dos Santos - 2019231352
+//Matilde Saraiva de Carvalho - 2019233490
+
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -110,8 +114,8 @@ int main(int argc, char *argv[])
             client_port++;
             if (fork() == 0)
             {
-                printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
-                fflush(stdout);
+                //printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
+                //fflush(stdout);
                 close(fd);
                 process_client(client);
                 exit(0);
@@ -163,7 +167,7 @@ void erro(char *msg)
 -----------------------------------------------------------------------*/
 void login(int client_fd, char username[])
 {
-    char msg_inicial[] = "\n==========================================\n                  LOGIN\n\n";
+    char msg_inicial[] = "\n FIREWALL by Manuel & Matilde\n==========================================\n                  LOGIN\n\n";
     send_visual(client_fd, msg_inicial);
 
     int option = -1;
@@ -278,7 +282,7 @@ void menu_client(int client_fd, char username[])
             // /----------/ Print Menu /----------/
             char menu_client[] = "\n==========================================\n                  MENU\n\n";
             send_visual(client_fd, menu_client);
-            char client_options[] = "  Commands: send , list, help & exit\n\n ";
+            char client_options[] = "  Commands: send | list | exit\n type help to know more about the commands\n\n ";
             send_visual(client_fd, client_options);
 
             // /----------/ Escolher o que fazer /----------/
@@ -562,7 +566,6 @@ void menu_client(int client_fd, char username[])
                 send_visual(client_fd, help_menu);
                 char help[] = "        Commands\n\
 $ send [user] [message] - Enviar mensagem[message] para o utilizador[user]\n\
-$ help - Mostrar menu de ajuda\n\
 $ list - Listar utilizadores online\n\
 $ exit - Sair / Logout \n\n ";
                 send_visual(client_fd, help);
@@ -715,7 +718,9 @@ void menu_admin(int admin_fd)
         (3) Remover Palavra\n\
         (4) Adicionar Utilzador\n\
         (5) Remover Utilzador\n\
-        (6) Sair\n\n ";
+        (6) Ajuda\n\
+        (7) Sair\n\
+        Selecione uma opção (1 a 7):\n\n ";
         send_visual(admin_fd, admin_options);
 
         // /----------/ Escolher o que fazer /----------/
@@ -995,8 +1000,23 @@ void menu_admin(int admin_fd)
                 }
             }
         }
-        // /====================/ (6) Sair /====================/
+         // /====================/ (6) Ajuda/====================/
         else if (option[0] == '6')
+        {
+            char menu_ajuda[] = "\n==========================================\n               AJUDA\n\n";
+            send_visual(admin_fd, menu_ajuda);
+
+            char menu_admin_ajuda[] = "\n        (1) Consultar Palavras - ver palavras que estao na lista de palavras proibidas\n\
+        (2) Adicionar Palavra - adicionar uma palavra nova a lista de palavras proibidas\n\
+        (3) Remover Palavra - remover uma palavra da lista de palavras proibidas\n\
+        (4) Adicionar Utilzador - adicionar utilizador novo ao sistema definindo o username e password\n\
+        (5) Remover Utilzador - remover utilizador do sistema\n\
+        (7) Sair - sair do menu administrador e voltar para o menu login\n\n ";
+           
+           send_visual(admin_fd, menu_admin_ajuda);
+        }
+        // /====================/ (7) Sair /====================/
+        else if (option[0] == '7')
         {
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
             send_visual(admin_fd, menu_admin_logout);

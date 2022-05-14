@@ -535,12 +535,18 @@ void menu_client(int client_fd, char username[])
                 char menu_online[] = "\n==========================================\n      Utilizadores Online\n\n";
                 send_visual(client_fd, menu_online);
 
-                // /----------/ Print Palavras /----------/
-                online_status = fopen("status.txt", "a+");
+                //online_status = fopen("status.txt", "a+");
+
+                if ((online_status = fopen("status.txt", "r")) == NULL)
+                {
+                    online_status = fopen("status.txt", "w");
+                }
+
                 while (fgets(user_aux, sizeof(user_aux), online_status))
                 {
                     strcpy(user, "");
                     int ind = 0;
+
                     while (user_aux[ind] != ',')
                     {
                         user[ind] = user_aux[ind];

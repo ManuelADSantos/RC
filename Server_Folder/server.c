@@ -610,7 +610,7 @@ $ exit - Sair / Logout \n\n ";
                 fclose(status_aux);
 
                 status = fopen("status.txt", "w");
-                status_aux = fopen("status_aux.txt", r);
+                status_aux = fopen("status_aux.txt", "r");
                 fseek(status_aux, 0, SEEK_SET);
                 while (fgets(read_status, sizeof(read_status), status_aux))
                 {

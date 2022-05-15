@@ -1,6 +1,6 @@
-//FIREWALL - Projeto de Redes de Computadores 2021/2022
-//Manuel Alberto Dionísio dos Santos - 2019231352
-//Matilde Saraiva de Carvalho - 2019233490
+// FIREWALL - Projeto de Redes de Computadores 2021/2022
+// Manuel Alberto Dionísio dos Santos - 2019231352
+// Matilde Saraiva de Carvalho - 2019233490
 
 #include <sys/socket.h>
 #include <sys/types.h>
@@ -114,8 +114,8 @@ int main(int argc, char *argv[])
             client_port++;
             if (fork() == 0)
             {
-                //printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
-                //fflush(stdout);
+                // printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
+                // fflush(stdout);
                 close(fd);
                 process_client(client);
                 exit(0);
@@ -535,7 +535,7 @@ void menu_client(int client_fd, char username[])
                 char menu_online[] = "\n==========================================\n      Utilizadores Online\n\n";
                 send_visual(client_fd, menu_online);
 
-                //online_status = fopen("status.txt", "a+");
+                // online_status = fopen("status.txt", "a+");
 
                 if ((online_status = fopen("status.txt", "r")) == NULL)
                 {
@@ -941,18 +941,19 @@ void menu_admin(int admin_fd)
             fflush(stdout);
 
             // /----------/ Receber novo username inserido /----------/
-            char remove_username[BUF_SIZE] = "";
+            char remove_username[BUF_SIZE] = "", remove_username_copy[BUF_SIZE] = "";
             ssize_t size_user_remove = recv(admin_fd, remove_username, BUF_SIZE, 0);
             remove_username[size_user_remove - 2] = '\0';
+            strcpy(remove_username_copy, remove_username);
 
             strcat(remove_username, ".txt");
             char remove_username_path[BUF_SIZE] = "./users/";
             strcat(remove_username_path, remove_username);
             strcpy(remove_username, remove_username_path);
 
-            if (fopen(remove_username, "r") == NULL)
+            if (fopen(remove_username, "r") == NULL || (strcmp(remove_username_copy, "admin") == 0))
             {
-                char msg_get_remove_user_dont_exist[BUF_SIZE] = "\n User does not exist";
+                char msg_get_remove_user_dont_exist[BUF_SIZE] = "\n Action not possible";
                 send_visual(admin_fd, msg_get_remove_user_dont_exist);
             }
             else
@@ -1006,7 +1007,7 @@ void menu_admin(int admin_fd)
                 }
             }
         }
-         // /====================/ (6) Ajuda/====================/
+        // /====================/ (6) Ajuda/====================/
         else if (option[0] == '6')
         {
             char menu_ajuda[] = "\n==========================================\n               AJUDA\n\n";
@@ -1018,8 +1019,8 @@ void menu_admin(int admin_fd)
         (4) Adicionar Utilzador - adicionar utilizador novo ao sistema definindo o username e password\n\
         (5) Remover Utilzador - remover utilizador do sistema\n\
         (7) Sair - sair do menu administrador e voltar para o menu login\n\n ";
-           
-           send_visual(admin_fd, menu_admin_ajuda);
+
+            send_visual(admin_fd, menu_admin_ajuda);
         }
         // /====================/ (7) Sair /====================/
         else if (option[0] == '7')

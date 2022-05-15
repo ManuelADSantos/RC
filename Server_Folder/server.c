@@ -584,7 +584,7 @@ $ exit - Sair / Logout \n\n ";
 
                 // Registar estado online
                 FILE *status_aux, *status;
-                status_aux = fopen("status_aux.txt", "wt+");
+                status_aux = fopen("status_aux.txt", "w");
                 status = fopen("status.txt", "r");
 
                 // /----------/ Escrever no ficheiro auxiliar /----------/
@@ -607,8 +607,10 @@ $ exit - Sair / Logout \n\n ";
                     }
                 }
                 fclose(status);
+                fclose(status_aux);
 
-                status = fopen("status.txt", "wt");
+                status = fopen("status.txt", "w");
+                status_aux = fopen("status_aux.txt", r);
                 fseek(status_aux, 0, SEEK_SET);
                 while (fgets(read_status, sizeof(read_status), status_aux))
                 {
@@ -914,7 +916,7 @@ void menu_admin(int admin_fd)
                 new_username_password[size_user_password - 2] = '\0';
 
                 // /----------/ Receber password do novo username inserido /----------/
-                file_new_user = fopen(new_username_path, "wt");
+                file_new_user = fopen(new_username_path, "w");
                 fwrite(new_username_password, sizeof(char), strlen(new_username_password), file_new_user);
                 fflush(stdout);
                 fclose(file_new_user);
@@ -1029,7 +1031,7 @@ void menu_admin(int admin_fd)
             send_visual(admin_fd, menu_admin_logout);
 
             FILE *status_aux, *status;
-            status_aux = fopen("status_aux.txt", "wt+");
+            status_aux = fopen("status_aux.txt", "w");
             status = fopen("status.txt", "r");
 
             // /----------/ Escrever no ficheiro auxiliar /----------/
@@ -1051,8 +1053,10 @@ void menu_admin(int admin_fd)
                 }
             }
             fclose(status);
+            fclose(status_aux);
 
-            status = fopen("status.txt", "wt");
+            status = fopen("status.txt", "w");
+            status_aux = fopen("status_aux.txt", "r");
             fseek(status_aux, 0, SEEK_SET);
             while (fgets(read_status, sizeof(read_status), status_aux))
             {

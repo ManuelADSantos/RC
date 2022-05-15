@@ -1,12 +1,8 @@
-// FIREWALL - Projeto de Redes de Computadores 2021/2022
-// Manuel Alberto Dionísio dos Santos - 2019231352
-// Matilde Saraiva de Carvalho - 2019233490
-
 /**********************************************************************
- * CLIENTE liga ao servidor (definido em argv[1]) no porto especificado
- * (em argv[2])
- * Uso: >cliente <enderecoServidor>  <porto>
- **********************************************************************/
+        FIREWALL - Projeto de Redes de Computadores 2021/2022
+            Manuel Alberto Dionísio dos Santos - 2019231352
+                Matilde Saraiva de Carvalho - 2019233490
+**********************************************************************/
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -18,14 +14,25 @@
 #include <signal.h>
 #include <sys/wait.h>
 
+/*-----------------------------------------------------------------------
+                                MACROS
+-----------------------------------------------------------------------*/
 #define BUF_SIZE 1024
 
+/*-----------------------------------------------------------------------
+                          VARIÁVEIS GLOBAIS
+-----------------------------------------------------------------------*/
 pid_t pid = 0;
 
-// ==================== Prototypes ====================
+/*-----------------------------------------------------------------------
+                              PROTÓTIPOS
+-----------------------------------------------------------------------*/
 void sig_handler(int sig);
 void erro(char *msg);
 
+/*-----------------------------------------------------------------------
+                                MAIN
+-----------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
     char endServer[100];
@@ -47,9 +54,8 @@ int main(int argc, char *argv[])
     if (connect(fd, (struct sockaddr *)&addr, sizeof(addr)) < 0)
         erro("Connect");
 
-    // ========== From here ==========
     if ((pid = fork()) == 0)
-    // Child
+    // /----------/ Child - Print das mensagens /----------/
     {
         while (1)
         {
@@ -57,9 +63,7 @@ int main(int argc, char *argv[])
             if (recv(fd, NULL, 0, MSG_PEEK) >= 0)
             {
                 fflush(stdout);
-                // ssize_t recebeu =
                 recv(fd, buffer_read, sizeof(buffer_read), 0);
-                // printf("Foram recebidos %ld bytes de informação\n", recebeu);
                 fflush(stdout);
                 printf("%s", buffer_read);
                 fflush(stdout);
@@ -67,9 +71,9 @@ int main(int argc, char *argv[])
         }
     }
     else
-    // Parent
+    // /----------/ Parent - Enviar mensagens /----------/
     {
-        // Update signal handler
+        // /----------/ Dar update do signal handler para SIGINT /----------/
         signal(SIGINT, sig_handler);
         while (1)
         {
@@ -80,9 +84,7 @@ int main(int argc, char *argv[])
                 fflush(stdout);
                 fgets(buffer_write, sizeof(buffer_write), stdin);
                 buffer_write[strcspn(buffer_write, "\n")] = 0;
-                // ssize_t enviou =
                 send(fd, buffer_write, strlen(buffer_write) + 2, 0);
-                // printf("Foram enviados %ld bytes de informação\n", enviou);
                 fflush(stdout);
                 fflush(stdin);
 
@@ -90,16 +92,20 @@ int main(int argc, char *argv[])
             }
         }
     }
-    // ========== To Here ==========
 }
 
+/*-----------------------------------------------------------------------
+                                ERRO
+-----------------------------------------------------------------------*/
 void erro(char *msg)
 {
     printf("Erro: %s\n", msg);
     exit(-1);
 }
 
-// ==================== Signal Handler Function ====================
+/*-----------------------------------------------------------------------
+                        Signal Handler Function
+-----------------------------------------------------------------------*/
 void sig_handler(int sig)
 {
     // If SIGINT is cacthed

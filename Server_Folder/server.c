@@ -1,7 +1,8 @@
-// FIREWALL - Projeto de Redes de Computadores 2021/2022
-// Manuel Alberto Dionísio dos Santos - 2019231352
-// Matilde Saraiva de Carvalho - 2019233490
-
+/**********************************************************************
+        FIREWALL - Projeto de Redes de Computadores 2021/2022
+            Manuel Alberto Dionísio dos Santos - 2019231352
+                Matilde Saraiva de Carvalho - 2019233490
+**********************************************************************/
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netinet/in.h>
@@ -48,11 +49,12 @@ void send_visual(int fd, char msg[]);
 -----------------------------------------------------------------------*/
 int main(int argc, char *argv[])
 {
-    // Create users directory
+    // Criar diretoria "users"
     mkdir("./users", 0777);
 
-    // Check id admin exists
+    // /----------/ Verificar se existe uma conta de admin /----------/
     FILE *check_admin;
+    // /----------/ Caso não exista /----------/
     if ((check_admin = fopen("./users/admin.txt", "r")) == NULL)
     {
         // /----------/ Criar e abrir ficheiro /----------/
@@ -65,7 +67,6 @@ int main(int argc, char *argv[])
         // /----------/ Receber password inserido /----------/
         char password[BUF_SIZE] = "";
         scanf("%s", password);
-        // password[strlen(password)] = 0;
 
         // /----------/ Registar password /----------/
         fwrite(password, sizeof(char), strlen(password), check_admin);
@@ -77,6 +78,7 @@ int main(int argc, char *argv[])
         // /----------/ Fechar ficheiro /----------/
         fclose(check_admin);
     }
+    // /----------/ Caso Exista /----------/
     else
     {
         fclose(check_admin);
@@ -107,15 +109,13 @@ int main(int argc, char *argv[])
     {
         while (waitpid(-1, NULL, WNOHANG) > 0)
             ;
-        // wait for new connection
+        // /----------/ Esperar por nova conexão /----------/
         client = accept(fd, (struct sockaddr *)&client_addr, (socklen_t *)&client_addr_size);
         if (client > 0)
         {
             client_port++;
             if (fork() == 0)
             {
-                // printf(" Novo cliente conectado :)\n Foi-lhe atribuído o porto %d\n\n", client_port);
-                // fflush(stdout);
                 close(fd);
                 process_client(client);
                 exit(0);
@@ -133,9 +133,6 @@ void process_client(int client_fd)
 {
     while (1)
     {
-        // /----------/ Estabelecer handler de SIGINT para o default /----------/
-        signal(SIGINT, SIG_DFL);
-
         // /----------/ Login /----------/
         char username[BUF_SIZE] = "";
         login(client_fd, username);
@@ -145,7 +142,7 @@ void process_client(int client_fd)
         {
             menu_admin(client_fd);
         }
-        // /----------/ Menu Client /----------/
+        // /----------/ Menu Cliente /----------/
         else
         {
             menu_client(client_fd, username);
@@ -181,6 +178,7 @@ void login(int client_fd, char username[])
         ssize_t size_user = recv(client_fd, username, BUF_SIZE, 0);
         username[size_user - 2] = '\0';
 
+        // /----------/ Preparação de manipulação do file do utilizador /----------/
         FILE *file_user;
         char filename_user[BUF_SIZE];
         strcpy(filename_user, username);
@@ -188,13 +186,15 @@ void login(int client_fd, char username[])
         char filename_user_path[BUF_SIZE] = "./users/";
         strcat(filename_user_path, filename_user);
 
+        // /----------/ Caso não exista o username em causa /----------/
         if ((file_user = fopen(filename_user_path, "r")) == NULL)
         {
-            // /----------/ Caso não exista o username em causa /----------/
+
             char msg_get_user_error[] = "  Username não existe. Insira um username válido\n";
             send_visual(client_fd, msg_get_user_error);
             option = -1;
         }
+        // /----------/ Caso exista o username em causa /----------/
         else
         {
             // /----------/ Existe username em causa /----------/
@@ -215,17 +215,16 @@ void login(int client_fd, char username[])
                 fflush(stdout);
                 password[size_password - 2] = '\0';
 
+                // /----------/ LOGIN AUTORIZADO /----------/
                 if (strcmp(password, user_password_auth) == 0)
                 {
-                    // /----------/ LOGIN AUTORIZADO /----------/
-                    // Construir mensagem de sucesso
+                    // /----------/ Construir mensagem de sucesso /----------/
                     char msg_login_sucess[BUF_SIZE] = "\n             Bem vind@ ";
                     strcat(msg_login_sucess, username);
                     strcat(msg_login_sucess, "\n\n");
-
                     send_visual(client_fd, msg_login_sucess);
 
-                    // =======================
+                    // /----------/ Atualizar Estado Online e Porto atribuído /----------/
                     char online_status[BUF_SIZE] = "";
                     strcat(online_status, username);
                     strcat(online_status, ",");
@@ -234,19 +233,18 @@ void login(int client_fd, char username[])
                     fflush(stdout);
                     strcat(online_status, porto);
                     fflush(stdout);
-
                     FILE *status;
                     status = fopen("status.txt", "a");
                     fwrite(online_status, sizeof(char), strlen(online_status), status);
                     fclose(status);
-                    // =======================
 
+                    // /----------/ Sair de Login /----------/
                     option = 0;
                     break;
                 }
+                // /----------/ PASSWORD ERRADA /----------/
                 else
                 {
-                    // /----------/ PASSWORD ERRADA /----------/
                     tentativas++;
                     char msg_get_password_error[BUF_SIZE] = "  Password Incorrreta. ";
                     char ten = (3 - tentativas) + '0';
@@ -255,6 +253,7 @@ void login(int client_fd, char username[])
                     strcat(msg_get_password_error, tenta);
                     strcat(msg_get_password_error, " tentativas restantes!\n");
                     send_visual(client_fd, msg_get_password_error);
+                    // /----------/ Caso exceda o número de tentativas /----------/
                     if (tentativas == 3)
                     {
                         option = -1;
@@ -273,13 +272,11 @@ void menu_client(int client_fd, char username[])
 {
     pid_t pid;
 
-    // /====================/ (SEND END) Enviar Mensagens /====================/
+    // /====================/ (SEND END) Enviar Comandos /====================/
     if ((pid = fork()) > 0)
     {
         while (1)
         {
-
-            // /----------/ Print Menu /----------/
             char menu_client[] = "\n==========================================\n                  MENU\n\n";
             send_visual(client_fd, menu_client);
             char client_options[] = "  Commands: send | list | exit\n type help to know more about the commands\n\n ";
@@ -287,15 +284,14 @@ void menu_client(int client_fd, char username[])
 
             // /----------/ Escolher o que fazer /----------/
             char cmd[BUF_SIZE] = "", option[BUF_SIZE] = "";
-            // ssize_t size_choice =
             recv(client_fd, cmd, BUF_SIZE, 0);
             fflush(stdout);
-
             strncpy(option, cmd, 4);
 
             // /====================/ (send) Enviar Mensagem a outro Utilizador /====================/
             if (strcmp(option, "send") == 0)
             {
+                // /----------/ Atriubuir um processo child para o envio da mensagem /----------/
                 if (fork() == 0)
                 {
                     // /----------/ Variáveis /----------/
@@ -327,49 +323,42 @@ void menu_client(int client_fd, char username[])
                     char forbidden_word[BUF_SIZE] = "", msg_word_read[BUF_SIZE] = "", msg_word_read_compare[BUF_SIZE] = "";
                     char msg_aux[BUF_SIZE] = "", msg_copy[BUF_SIZE] = "";
 
-                    // /----------/ Print Palavras /----------/
+                    // /----------/ Criar cópia da mensagem para processar /----------/
                     strcpy(msg_copy, msg);
                     strcat(msg_copy, " ");
 
+                    // /----------/ Remover artefactos do Telnet /----------/
                     for (int i = 0; i < strlen(msg_copy); i++)
                     {
-                        // printf("Letra>%c<\n", msg_copy[i]);
                         if (msg_copy[i] == '\n' || msg_copy[i] == 13 /*Carriage Return*/)
                             msg_copy[i] = ' ';
                     }
 
                     msg_copy[strlen(msg_copy)] = 0;
 
+                    // /----------/ Caso existam palavras proibidas registadas /----------/
                     if ((words_to_remove = fopen("words.txt", "r")) != NULL)
                     {
-                        /*printf("\nFILE_WORDs_TO_REMOVE\n");
-                        fflush(stdout);
-                        printf("msg_copy>%s<\n", msg_copy);
-                        fflush(stdout);*/
-
                         // Comparar palavra do file com palavras da mensagem
                         int ind = 0;
                         for (int i = 0; i < strlen(msg_copy); i++)
                         {
+                            // /----------/ Detetar palavras individuais /----------/
+                            // /----------/ Caso não seja um espaço /----------/
                             if (msg_copy[i] != ' ')
                             {
-                                /*printf("NAO E ESPACO\n");
-                                fflush(stdout);*/
                                 msg_word_read[ind] = msg_copy[i];
                                 ind++;
-
-                                /*printf("msg_word_read>%s<\n", msg_word_read);
-                                fflush(stdout);*/
                             }
+                            // /----------/ Caso seja um espaço /----------/
                             else
                             {
-                                /*printf("E ESPACO\n");
-                                fflush(stdout);*/
-
                                 strcpy(msg_word_read_compare, msg_word_read);
+                                // /----------/ Comparar com as letras todas minúsculas /----------/
                                 for (int j = 0; j < strlen(msg_word_read); j++)
                                     msg_word_read_compare[j] = tolower(msg_word_read[j]);
 
+                                // /----------/ Obter e comparar palavras registadas com a analisada no momento /----------/
                                 while (fgets(forbidden_word, sizeof(forbidden_word), words_to_remove))
                                 {
                                     for (int j = 0; j < strlen(forbidden_word); j++)
@@ -377,27 +366,24 @@ void menu_client(int client_fd, char username[])
                                         if (forbidden_word[j] == '\n')
                                             forbidden_word[j] = 0;
                                     }
-                                    /*printf("forbidden_word>%s<\n", forbidden_word);
-                                    fflush(stdout);*/
 
-                                    // Palavra proibida
+                                    // /----------/ Comparar palavras /----------/
                                     if (strcmp(msg_word_read_compare, forbidden_word) == 0)
                                     {
-                                        /*printf("PROIBIDA>%s<|DETETADA>%s<\n", forbidden_word, msg_word_read);
-                                        fflush(stdout);*/
+                                        // /----------/ Censurar /----------/
                                         for (int j = 0; j < strlen(msg_word_read); j++)
                                             msg_word_read[j] = '*';
                                         break;
                                     }
                                 }
+                                // /----------/ Voltar o ponteiro de leitura ao início do ficheiro de palavras proibidas /----------/
                                 fseek(words_to_remove, 0, SEEK_SET);
 
+                                // /----------/ Colocar espaço não considerado /----------/
                                 strcat(msg_aux, msg_word_read);
                                 strcat(msg_aux, " ");
 
-                                /*printf("msg_aux so far>%s<\n", msg_aux);
-                                fflush(stdout);*/
-
+                                // /----------/ Limpar buffer de leitura de análise /----------/
                                 for (int j = 0; j < sizeof(msg_word_read) / sizeof(char); j++)
                                     msg_word_read[j] = 0;
 
@@ -408,10 +394,7 @@ void menu_client(int client_fd, char username[])
                         // /----------/ Mensagem tratada colocada em msg_aux /----------/
                         strcpy(msg, msg_aux);
 
-                        /*printf("msg so far>%s<\n", msg);
-                        fflush(stdout);*/
-
-                        // /----------/ Fechar ficheiro /----------/
+                        // /----------/ Fechar ficheiro das palavras proibidas /----------/
                         fclose(words_to_remove);
                     }
 
@@ -429,20 +412,14 @@ void menu_client(int client_fd, char username[])
                     strcat(msg_aux, ": ");
                     strcat(msg_aux, msg);
                     strcat(msg_aux, "\n\n");
-
                     strcpy(msg, msg_aux);
-
-                    /*printf("USER>%s<\n", user);
-                    fflush(stdout);
-                    printf("MESSAGE>%s<\n", msg);
-                    fflush(stdout);*/
 
                     // /----------/ Procurar Porto do Destinatário /----------/
                     int port_destino = 0;
                     FILE *destiny_port;
                     char user_port[BUF_SIZE] = "", reader[BUF_SIZE] = "", reader_aux[BUF_SIZE] = "";
 
-                    // /----------/ Abrir ficheiro /----------/
+                    // /----------/ Abrir ficheiro com estados online e portos atribuídos /----------/
                     destiny_port = fopen("status.txt", "r");
 
                     // /----------/ Procurar porto para enviar informação /----------/
@@ -478,7 +455,7 @@ void menu_client(int client_fd, char username[])
 
                     if ((send_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0)
                     {
-                        // socket() sem sucesso
+                        // /----------/ socket() sem sucesso /----------/
                         printf("(%s) Erro no socket() de envio\n", username);
                         fflush(stdout);
                         exit(1);
@@ -487,10 +464,6 @@ void menu_client(int client_fd, char username[])
                     // /----------/ Limpar endereço de envio /----------/
                     bzero(&receiver_addr, sizeof(receiver_addr));
 
-                    // socket() com sucesso
-                    /*printf("(%s) Socket() de envio com sucesso\n", username);
-                    fflush(stdout);*/
-
                     // /----------/ Estabelececr Parâmetros do socket /----------/
                     receiver_addr.sin_family = AF_INET;
                     receiver_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
@@ -498,28 +471,22 @@ void menu_client(int client_fd, char username[])
 
                     if (connect(send_fd, (struct sockaddr *)&receiver_addr, sizeof(receiver_addr)) < 0)
                     {
-                        // connect() sem sucesso
+                        // /----------/ connect() sem sucesso /----------/
                         printf("(%s) Erro no connect() de envio\n", username);
                         fflush(stdout);
                         exit(1);
                     }
-                    // connect() com sucesso
-                    /*printf("(%s) Connect() de envio com sucesso\n", username);
-                    fflush(stdout);*/
 
                     // /----------/ Enviar Mensagem /----------/
                     send(send_fd, msg, strlen(msg), 0);
                     fflush(stdout);
 
-                    /*printf("(%s) Enviei com sucesso\n===================\n\n", username);
-                    fflush(stdout);*/
-
                     // /----------/ Terminar Socket /----------/
-                    // shutdown(send_fd, SHUT_RDWR);
                     close(send_fd);
 
                     exit(0);
                 }
+                // /----------/ Evitar processos zombie /----------/
                 wait(NULL);
             }
 
@@ -535,18 +502,18 @@ void menu_client(int client_fd, char username[])
                 char menu_online[] = "\n==========================================\n      Utilizadores Online\n\n";
                 send_visual(client_fd, menu_online);
 
-                // online_status = fopen("status.txt", "a+");
-
                 if ((online_status = fopen("status.txt", "r")) == NULL)
                 {
                     online_status = fopen("status.txt", "w");
                 }
 
+                // /----------/ Obter usernames dos utilizadores ativos /----------/
                 while (fgets(user_aux, sizeof(user_aux), online_status))
                 {
                     strcpy(user, "");
                     int ind = 0;
 
+                    // /----------/ Considerar apenas username /----------/
                     while (user_aux[ind] != ',')
                     {
                         user[ind] = user_aux[ind];
@@ -554,6 +521,7 @@ void menu_client(int client_fd, char username[])
                     }
                     user[ind] = '\0';
 
+                    // /----------/ Não mostrar admin /----------/
                     if (strcmp(user, username) != 0 && strcmp(user, "admin") != 0)
                     {
                         send(client_fd, user, strlen(user), 0);
@@ -568,6 +536,7 @@ void menu_client(int client_fd, char username[])
             // /====================/ (help) Listar e explicar comandos possíveis /====================/
             else if (strcmp(option, "help") == 0)
             {
+                // /----------/ Print da informação /----------/
                 char help_menu[] = "\n==========================================\n                  HELP\n\n";
                 send_visual(client_fd, help_menu);
                 char help[] = "        Commands\n\
@@ -582,12 +551,12 @@ $ exit - Sair / Logout \n\n ";
                 char menu_client_logout[] = "                 LOGOUT\n==========================================\n\n";
                 send_visual(client_fd, menu_client_logout);
 
-                // Registar estado online
+                // /----------/ Atualizar estado online /----------/
                 FILE *status_aux, *status;
                 status_aux = fopen("status_aux.txt", "w");
                 status = fopen("status.txt", "r");
 
-                // /----------/ Escrever no ficheiro auxiliar /----------/
+                // /----------/ Escrever no ficheiro auxiliar (Para filtrar) /----------/
                 char read_status[BUF_SIZE] = "";
                 char to_off_status[BUF_SIZE] = "";
                 char aux[10] = "";
@@ -596,10 +565,12 @@ $ exit - Sair / Logout \n\n ";
                 sprintf(aux, "%d\n", client_port);
                 strcat(to_off_status, aux);
 
+                // /----------/ Analisar todos os utilizadores online /----------/
                 while (fgets(read_status, sizeof(read_status), status))
                 {
                     fflush(stdout);
 
+                    // /----------/ Caso não sejam o utilizadore pretendido /----------/
                     if (strcmp(to_off_status, read_status) != 0)
                     {
                         fwrite(read_status, sizeof(char), strlen(read_status), status_aux);
@@ -622,6 +593,7 @@ $ exit - Sair / Logout \n\n ";
                 fclose(status_aux);
                 remove("status_aux.txt");
 
+                // /----------/ Kill do Receive End /----------/
                 kill(pid, SIGINT);
                 wait(NULL);
 
@@ -643,9 +615,6 @@ $ exit - Sair / Logout \n\n ";
             fflush(stdout);
             exit(1);
         }
-        // socket() com sucesso
-        /*printf("(%s) socket() do receiver com sucesso\n", username);
-        fflush(stdout);*/
 
         bzero((void *)&receiver_adrr, sizeof(receiver_adrr));
         receiver_adrr.sin_family = AF_INET;
@@ -659,9 +628,6 @@ $ exit - Sair / Logout \n\n ";
             fflush(stdout);
             exit(1);
         }
-        // bind() com sucesso
-        /*printf("(%s) bind() do receiver com sucesso\n", username);
-        fflush(stdout);*/
 
         if ((listen(connection_fd, 5)) < 0)
         {
@@ -670,9 +636,6 @@ $ exit - Sair / Logout \n\n ";
             fflush(stdout);
             exit(1);
         }
-        // listen() com sucesso
-        /*printf("(%s) listen() do receiver com sucesso\n", username);
-        fflush(stdout);*/
 
         sender_addr_size = sizeof(sender_addr);
 
@@ -683,19 +646,16 @@ $ exit - Sair / Logout \n\n ";
 
             sender_fd = accept(connection_fd, (struct sockaddr *)&sender_addr, (socklen_t *)&sender_addr_size);
 
-            // Se receber ligação
+            // /----------/ Se receber ligação /----------/
             if (sender_fd > 0)
             {
-                // listen() com sucesso
-                /*printf("(%s) accept() do receiver com sucesso\n", username);
-                fflush(stdout);*/
                 {
                     if (fork() == 0)
                     {
                         close(connection_fd);
 
+                        ///----------/ Simplesmente receber mensagem que chegou e dar print /----------/
                         char msg_received[BUF_SIZE] = "";
-                        // ssize_t size_msg_received =
                         recv(sender_fd, msg_received, BUF_SIZE, 0);
                         fflush(stdout);
                         send_visual(client_fd, msg_received);
@@ -703,7 +663,6 @@ $ exit - Sair / Logout \n\n ";
                         exit(0);
                     }
                 }
-                // shutdown(sender_fd, SHUT_RDWR);
                 close(sender_fd);
             }
         }
@@ -755,6 +714,7 @@ void menu_admin(int admin_fd)
                 file_words = fopen("words.txt", "w");
             }
 
+            // /----------/ Listar palavras proibidas /----------/
             while (fgets(word, sizeof(word), file_words))
             {
                 send(admin_fd, word, strlen(word), 0);
@@ -1030,6 +990,7 @@ void menu_admin(int admin_fd)
             char menu_admin_logout[] = "                 LOGOUT\n==========================================\n\n";
             send_visual(admin_fd, menu_admin_logout);
 
+            // /----------/ Atualizar Estado Online /----------/
             FILE *status_aux, *status;
             status_aux = fopen("status_aux.txt", "w");
             status = fopen("status.txt", "r");
@@ -1042,6 +1003,7 @@ void menu_admin(int admin_fd)
             sprintf(aux, "%d\n", client_port);
             strcat(to_off_status, aux);
 
+            // /----------/ Ler utilzadores online /----------/
             while (fgets(read_status, sizeof(read_status), status))
             {
                 fflush(stdout);
@@ -1055,6 +1017,7 @@ void menu_admin(int admin_fd)
             fclose(status);
             fclose(status_aux);
 
+            // /----------/ Atualizar status /----------/
             status = fopen("status.txt", "w");
             status_aux = fopen("status_aux.txt", "r");
             fseek(status_aux, 0, SEEK_SET);
